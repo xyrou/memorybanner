@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Download, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
+import { LANGUAGES } from '@/types'
 
 const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
 
@@ -16,6 +17,7 @@ export default function NewOrderPage() {
     couple_names: '',
     event_date: '',
     email: '',
+    language: 'en',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -187,6 +189,29 @@ export default function NewOrderPage() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Galeri Dili
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, language: lang.value })}
+                  className={`flex flex-col items-center gap-1 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                    form.language === lang.value
+                      ? 'border-black bg-black text-white'
+                      : 'border-gray-200 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <span className="text-lg">{lang.flag}</span>
+                  <span>{lang.value.toUpperCase()}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <button

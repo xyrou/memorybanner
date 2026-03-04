@@ -1,6 +1,15 @@
 export type Plan = 'free' | 'premium' | 'premium_plus'
 export type MediaType = 'photo' | 'video'
 export type Template = 'romantic' | 'modern' | 'rustic' | 'minimal'
+export type Language = 'en' | 'fr' | 'de' | 'it' | 'es'
+
+export const LANGUAGES: { value: Language; flag: string; label: string }[] = [
+  { value: 'en', flag: '🇺🇸', label: 'English' },
+  { value: 'fr', flag: '🇫🇷', label: 'Français' },
+  { value: 'de', flag: '🇩🇪', label: 'Deutsch' },
+  { value: 'it', flag: '🇮🇹', label: 'Italiano' },
+  { value: 'es', flag: '🇪🇸', label: 'Español' },
+]
 
 export interface Order {
   id: string
@@ -20,6 +29,7 @@ export interface Order {
   template: Template
   cover_photo_url: string | null
   location: string | null
+  language: Language
   expires_at: string
   created_at: string
 }

@@ -20,6 +20,7 @@ CREATE TABLE orders (
   template TEXT NOT NULL DEFAULT 'romantic' CHECK (template IN ('romantic', 'modern', 'rustic', 'minimal')),
   cover_photo_url TEXT,
   location TEXT,
+  language TEXT NOT NULL DEFAULT 'en' CHECK (language IN ('en', 'fr', 'de', 'it', 'es')),
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

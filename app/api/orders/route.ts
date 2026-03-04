@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { couple_names, event_date, email } = body
+  const { couple_names, event_date, email, language = 'en' } = body
 
   if (!couple_names || !event_date) {
     return NextResponse.json({ error: 'couple_names and event_date are required' }, { status: 400 })
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('orders')
-    .insert({ slug, couple_names, event_date, email, expires_at })
+    .insert({ slug, couple_names, event_date, email, language, expires_at })
     .select()
     .single()
 
