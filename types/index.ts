@@ -1,6 +1,6 @@
 export type Plan = 'free' | 'premium' | 'premium_plus'
 export type MediaType = 'photo' | 'video'
-export type Template = 'romantic' | 'modern' | 'rustic' | 'minimal'
+export type Template = 'romantic' | 'noir' | 'golden' | 'garden' | 'burgundy' | 'sage'
 export type Language = 'en' | 'fr' | 'de' | 'it' | 'es'
 
 export const LANGUAGES: { value: Language; flag: string; label: string }[] = [
@@ -71,7 +71,7 @@ export const PLAN_LIMITS = {
   },
   premium_plus: {
     photos: Infinity,
-    videos: 100,
+    videos: Infinity,
     days: 1095, // 3 years
     price: 99,
     label: 'Premium Plus',

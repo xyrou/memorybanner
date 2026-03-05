@@ -30,6 +30,7 @@ export async function POST(
   const contentType = req.headers.get('content-type') || 'video/mp4'
   const filename = decodeURIComponent(req.headers.get('x-filename') || 'video.mp4')
   const fileSize = parseInt(req.headers.get('x-filesize') || '0')
+  const guestName = decodeURIComponent(req.headers.get('x-guest-name') || 'Guest')
   const body = await req.arrayBuffer()
 
   const key = getMediaKey(slug, 'video', filename)
@@ -52,7 +53,7 @@ export async function POST(
       r2_key: key,
       file_size: fileSize,
       original_name: filename,
-      uploaded_by: 'guest',
+      uploaded_by: guestName,
     })
     .select()
     .single()
