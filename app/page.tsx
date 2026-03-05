@@ -50,19 +50,21 @@ export default async function HomePage({
         <span className="font-bold text-lg tracking-tight">MemoryBanner</span>
         <div className="flex items-center gap-3">
           {/* Language switcher */}
-          <div className="flex items-center gap-1">
-            {LANDING_LANGS.map((l) => (
-              <Link
-                key={l.code}
-                href={`/?lang=${l.code}`}
-                className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                  lang === l.code
-                    ? 'bg-gray-100 font-semibold text-gray-900'
-                    : 'text-gray-400 hover:text-gray-700'
-                }`}
-              >
-                {l.flag} {l.label}
-              </Link>
+          <div className="flex items-center">
+            {LANDING_LANGS.map((l, i) => (
+              <span key={l.code} className="flex items-center">
+                {i > 0 && <span className="text-gray-200 text-xs">·</span>}
+                <Link
+                  href={`/?lang=${l.code}`}
+                  className={`text-xs px-1.5 py-1 transition-colors font-mono tracking-wide ${
+                    lang === l.code
+                      ? 'text-gray-900 font-bold'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              </span>
             ))}
           </div>
           <Link
