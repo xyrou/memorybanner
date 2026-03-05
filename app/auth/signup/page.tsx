@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserSupabase } from '@/lib/supabase'
+import SocialButtons from '../social-buttons'
 
 export default function SignupPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -62,6 +61,14 @@ export default function SignupPage() {
             MemoryBanner
           </Link>
           <p className="text-sm text-gray-500 mt-1">Create your account</p>
+        </div>
+
+        <SocialButtons />
+
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-gray-100" />
+          <span className="text-xs text-gray-400">or</span>
+          <div className="flex-1 h-px bg-gray-100" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

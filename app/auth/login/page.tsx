@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserSupabase } from '@/lib/supabase'
+import SocialButtons from '../social-buttons'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -38,6 +39,14 @@ export default function LoginPage() {
             MemoryBanner
           </Link>
           <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+        </div>
+
+        <SocialButtons />
+
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-gray-100" />
+          <span className="text-xs text-gray-400">or</span>
+          <div className="flex-1 h-px bg-gray-100" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
