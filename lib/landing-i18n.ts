@@ -269,5 +269,5 @@ const T = {
 export type LandingT = typeof T.en
 
 export function lt(lang: LandingLang): LandingT {
-  return T[lang] ?? T.en
+  return (T[lang] ?? T.en) as unknown as LandingT
 }
