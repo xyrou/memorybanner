@@ -4,25 +4,25 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Order, PLAN_LIMITS } from '@/types'
 import { Download, Plus, ExternalLink } from 'lucide-react'
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
+import { useAdminSecret } from './layout'
 
 export default function AdminPage() {
+  const adminSecret = useAdminSecret()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/orders', {
-      headers: { 'x-admin-secret': ADMIN_SECRET },
+      headers: { 'x-admin-secret': adminSecret },
     })
       .then((r) => r.json())
       .then(setOrders)
       .finally(() => setLoading(false))
-  }, [])
+  }, [adminSecret])
 
   const downloadQR = async (slug: string, format: 'png' | 'svg') => {
     const res = await fetch(`/api/qr/${slug}?format=${format}`, {
-      headers: { 'x-admin-secret': ADMIN_SECRET },
+      headers: { 'x-admin-secret': adminSecret },
     })
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)

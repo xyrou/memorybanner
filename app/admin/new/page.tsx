@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Download, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { LANGUAGES } from '@/types'
-
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
+import { useAdminSecret } from '../layout'
 
 export default function NewOrderPage() {
+  const adminSecret = useAdminSecret()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [created, setCreated] = useState<{ slug: string; setupUrl: string } | null>(null)
@@ -28,7 +28,7 @@ export default function NewOrderPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-secret': ADMIN_SECRET,
+          'x-admin-secret': adminSecret,
         },
         body: JSON.stringify(form),
       })
@@ -46,7 +46,7 @@ export default function NewOrderPage() {
   const downloadQR = async (format: 'png' | 'svg') => {
     if (!created) return
     const res = await fetch(`/api/qr/${created.slug}?format=${format}`, {
-      headers: { 'x-admin-secret': ADMIN_SECRET },
+      headers: { 'x-admin-secret': adminSecret },
     })
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
