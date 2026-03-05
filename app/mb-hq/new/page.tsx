@@ -129,7 +129,7 @@ export default function NewOrderPage() {
               Yeni Sipariş
             </button>
             <Link
-              href="/admin"
+              href="/mb-hq"
               className="flex-1 bg-black text-white text-center rounded-lg py-2.5 text-sm hover:bg-gray-800 transition-colors"
             >
               Listeye Dön
@@ -144,7 +144,7 @@ export default function NewOrderPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md w-full">
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/admin" className="text-gray-400 hover:text-gray-700 transition-colors">
+          <Link href="/mb-hq" className="text-gray-400 hover:text-gray-700 transition-colors">
             <ArrowLeft size={20} />
           </Link>
           <h1 className="text-xl font-bold text-gray-900">Yeni Sipariş</h1>
