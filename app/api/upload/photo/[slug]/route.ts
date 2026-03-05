@@ -6,14 +6,15 @@ import { PLAN_LIMITS } from '@/types'
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params
   const supabase = createServiceClient()
 
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (orderError || !order) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -28,7 +29,7 @@ export async function POST(
   const fileSize = parseInt(req.headers.get('x-filesize') || '0')
   const body = await req.arrayBuffer()
 
-  const key = getMediaKey(params.slug, 'photo', filename)
+  const key = getMediaKey(slug, 'photo', filename)
 
   await r2.send(new PutObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME!,

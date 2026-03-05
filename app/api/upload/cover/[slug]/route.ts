@@ -5,21 +5,22 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params
   const supabase = createServiceClient()
 
   const { data: order } = await supabase
     .from('orders')
     .select('id')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const contentType = req.headers.get('content-type') || 'image/jpeg'
   const body = await req.arrayBuffer()
-  const key = `${params.slug}/cover/cover.jpg`
+  const key = `${slug}/cover/cover.jpg`
 
   await r2.send(new PutObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME!,

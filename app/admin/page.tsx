@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Order, PLAN_LIMITS } from '@/types'
-import { Download, Plus, ExternalLink, Clock } from 'lucide-react'
+import { Download, Plus, ExternalLink } from 'lucide-react'
 
 const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET || ''
 

@@ -4,14 +4,14 @@ import { createServiceClient } from '@/lib/supabase'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const adminSecret = req.headers.get('x-admin-secret')
   if (adminSecret !== process.env.ADMIN_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { slug } = params
+  const { slug } = await params
   const format = req.nextUrl.searchParams.get('format') || 'png'
 
   const supabase = createServiceClient()

@@ -3,13 +3,14 @@ import { createServiceClient } from '@/lib/supabase'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('orders')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -18,8 +19,9 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params
   const supabase = createServiceClient()
   const body = await req.json()
   const allowed = ['template', 'location', 'cover_photo_url', 'is_setup',
@@ -34,7 +36,7 @@ export async function PATCH(
   const { data, error } = await supabase
     .from('orders')
     .update(update)
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .select()
     .single()
 

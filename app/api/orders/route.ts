@@ -3,7 +3,12 @@ import { createServiceClient } from '@/lib/supabase'
 import { generateSlug } from '@/lib/slug'
 import { getExpiresAt } from '@/lib/plans'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const adminSecret = req.headers.get('x-admin-secret')
+  if (adminSecret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('orders')
