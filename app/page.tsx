@@ -1,56 +1,110 @@
-import Link from 'next/link'
 import { QrCode, Camera, Heart, Users, Globe, Shield } from 'lucide-react'
+import { lt, LANDING_LANGS, LandingLang } from '@/lib/landing-i18n'
+import Link from 'next/link'
 
-export const metadata = {
-  title: 'MemoryBanner — Wedding Photo Gallery via QR Code',
-  description:
-    'Turn your wedding banner into a live photo gallery. Guests scan the QR code, upload photos, and leave messages — all in one beautiful place.',
+const ETSY_URL = 'https://www.etsy.com'
+
+export function generateMetadata({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
+  return {
+    title: 'MemoryBanner — Wedding Photo Gallery via QR Code',
+    description:
+      'Turn your wedding banner into a live photo gallery. Guests scan the QR code, upload photos, and leave messages.',
+  }
 }
 
-export default function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>
+}) {
+  const { lang: rawLang } = await searchParams
+  const validLangs: LandingLang[] = ['en', 'de', 'fr', 'it', 'es']
+  const lang: LandingLang = validLangs.includes(rawLang as LandingLang)
+    ? (rawLang as LandingLang)
+    : 'en'
+  const c = lt(lang)
+
+  const plans = [
+    { name: c.plan_free, price: c.plan_free_price, desc: c.plan_free_desc, features: c.plan_free_f, highlight: false },
+    { name: c.plan_premium, price: c.plan_premium_price, desc: c.plan_premium_desc, features: c.plan_premium_f, highlight: true },
+    { name: c.plan_plus, price: c.plan_plus_price, desc: c.plan_plus_desc, features: c.plan_plus_f, highlight: false },
+  ]
+
+  const features = [
+    { icon: <Camera size={20} />, title: c.f1_title, desc: c.f1_desc },
+    { icon: <Heart size={20} />, title: c.f2_title, desc: c.f2_desc },
+    { icon: <QrCode size={20} />, title: c.f3_title, desc: c.f3_desc },
+    { icon: <Globe size={20} />, title: c.f4_title, desc: c.f4_desc },
+    { icon: <Users size={20} />, title: c.f5_title, desc: c.f5_desc },
+    { icon: <Shield size={20} />, title: c.f6_title, desc: c.f6_desc },
+  ]
+
+  const steps = [
+    { step: '01', icon: <QrCode size={24} />, title: c.s1_title, desc: c.s1_desc },
+    { step: '02', icon: <Camera size={24} />, title: c.s2_title, desc: c.s2_desc },
+    { step: '03', icon: <Heart size={24} />, title: c.s3_title, desc: c.s3_desc },
+  ]
+
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
       {/* Nav */}
       <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-5xl mx-auto">
         <span className="font-bold text-lg tracking-tight">MemoryBanner</span>
-        <a
-          href="https://www.etsy.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors"
-        >
-          Buy on Etsy
-        </a>
+        <div className="flex items-center gap-3">
+          {/* Language switcher */}
+          <div className="flex items-center gap-1">
+            {LANDING_LANGS.map((l) => (
+              <Link
+                key={l.code}
+                href={`/?lang=${l.code}`}
+                className={`text-xs px-2 py-1 rounded-md transition-colors ${
+                  lang === l.code
+                    ? 'bg-gray-100 font-semibold text-gray-900'
+                    : 'text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                {l.flag} {l.label}
+              </Link>
+            ))}
+          </div>
+          <a
+            href={ETSY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors"
+          >
+            {c.nav_buy}
+          </a>
+        </div>
       </nav>
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
           <QrCode size={12} />
-          QR Code · Live Gallery · Guestbook
+          {c.hero_badge}
         </div>
         <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight mb-6">
-          Every wedding photo,<br />
-          <span className="text-gray-400">in one place.</span>
+          {c.hero_h1a}<br />
+          <span className="text-gray-400">{c.hero_h1b}</span>
         </h1>
         <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed">
-          Your guests scan the QR code on your banner, upload their photos and videos,
-          and leave heartfelt messages — creating a shared memory that lasts forever.
+          {c.hero_sub}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
-            href="https://www.etsy.com"
+            href={ETSY_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-black text-white px-8 py-3.5 rounded-full font-medium hover:bg-gray-800 transition-colors"
           >
-            Order on Etsy
+            {c.hero_cta}
           </a>
           <a
             href="#how-it-works"
             className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-full font-medium hover:border-gray-400 transition-colors"
           >
-            See how it works
+            {c.hero_alt}
           </a>
         </div>
       </section>
@@ -60,12 +114,15 @@ export default function HomePage() {
         <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 text-center">
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-200 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+              <div
+                key={i}
+                className="aspect-square bg-gray-200 rounded-xl"
+              />
             ))}
           </div>
           <p className="text-sm text-gray-400 flex items-center justify-center gap-1.5">
             <Heart size={12} className="text-rose-400" fill="currentColor" />
-            42 photos · 8 messages
+            {c.preview_caption}
           </p>
         </div>
       </section>
@@ -73,29 +130,10 @@ export default function HomePage() {
       {/* How it works */}
       <section id="how-it-works" className="bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-3">How it works</h2>
-          <p className="text-gray-500 text-center mb-12">Three simple steps to your wedding gallery</p>
+          <h2 className="text-3xl font-bold text-center mb-3">{c.how_h2}</h2>
+          <p className="text-gray-500 text-center mb-12">{c.how_sub}</p>
           <div className="grid sm:grid-cols-3 gap-8">
-            {[
-              {
-                step: '01',
-                icon: <QrCode size={24} />,
-                title: 'Order & receive QR',
-                desc: 'Purchase on Etsy, get a unique QR code for your wedding banner within minutes.',
-              },
-              {
-                step: '02',
-                icon: <Camera size={24} />,
-                title: 'Guests scan & share',
-                desc: 'Guests scan with their phone — no app needed. They upload photos, videos, and messages.',
-              },
-              {
-                step: '03',
-                icon: <Heart size={24} />,
-                title: 'Relive the memories',
-                desc: 'Browse your growing gallery, read guestbook entries, and download everything.',
-              },
-            ].map((item) => (
+            {steps.map((item) => (
               <div key={item.step} className="bg-white rounded-2xl p-6 border border-gray-100">
                 <div className="text-xs font-bold text-gray-300 mb-4">{item.step}</div>
                 <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center mb-4 text-gray-700">
@@ -111,17 +149,10 @@ export default function HomePage() {
 
       {/* Features */}
       <section className="py-20 max-w-5xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center mb-3">Everything you need</h2>
-        <p className="text-gray-500 text-center mb-12">Built for couples, designed for guests</p>
+        <h2 className="text-3xl font-bold text-center mb-3">{c.feat_h2}</h2>
+        <p className="text-gray-500 text-center mb-12">{c.feat_sub}</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { icon: <Camera size={20} />, title: 'Photo & Video Gallery', desc: 'Guests upload directly from their phones. No account required.' },
-            { icon: <Heart size={20} />, title: 'Digital Guestbook', desc: 'Leave heartfelt messages alongside the photos.' },
-            { icon: <QrCode size={20} />, title: 'Print-Ready QR Code', desc: 'High-res PNG and vector SVG for your banner designer.' },
-            { icon: <Globe size={20} />, title: '5 Languages', desc: 'English, Turkish, German, French, and Spanish.' },
-            { icon: <Users size={20} />, title: 'Beautiful Templates', desc: 'Romantic, Modern, Rustic, and Minimal themes.' },
-            { icon: <Shield size={20} />, title: 'Private Gallery', desc: 'Only people with your QR code can access your gallery.' },
-          ].map((f) => (
+          {features.map((f) => (
             <div key={f.title} className="flex gap-4 p-5 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
               <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 text-gray-700">
                 {f.icon}
@@ -138,32 +169,10 @@ export default function HomePage() {
       {/* Pricing */}
       <section className="bg-gray-50 py-20">
         <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-3">Simple pricing</h2>
-          <p className="text-gray-500 text-center mb-12">Choose the plan that fits your wedding</p>
+          <h2 className="text-3xl font-bold text-center mb-3">{c.price_h2}</h2>
+          <p className="text-gray-500 text-center mb-12">{c.price_sub}</p>
           <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                name: 'Free',
-                price: 'Included',
-                desc: 'Perfect for small gatherings',
-                features: ['10 photos', 'No videos', '90-day access', '1 template'],
-                highlight: false,
-              },
-              {
-                name: 'Premium',
-                price: '$13',
-                desc: 'Most popular choice',
-                features: ['100 photos', '5 videos', '1-year access', 'All templates', 'Guestbook'],
-                highlight: true,
-              },
-              {
-                name: 'Premium+',
-                price: '$99',
-                desc: 'For the big celebration',
-                features: ['Unlimited photos', 'Unlimited videos', '3-year access', 'All templates', 'Guestbook', 'Priority support'],
-                highlight: false,
-              },
-            ].map((plan) => (
+            {plans.map((plan) => (
               <div
                 key={plan.name}
                 className={`rounded-2xl p-6 border ${
@@ -172,23 +181,25 @@ export default function HomePage() {
                     : 'bg-white border-gray-100'
                 }`}
               >
-                <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${plan.highlight ? 'text-gray-400' : 'text-gray-400'}`}>
+                <div className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">
                   {plan.name}
                 </div>
                 <div className={`text-3xl font-bold mb-1 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
                   {plan.price}
                 </div>
-                <p className={`text-xs mb-5 ${plan.highlight ? 'text-gray-400' : 'text-gray-500'}`}>{plan.desc}</p>
+                <p className={`text-xs mb-5 ${plan.highlight ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {plan.desc}
+                </p>
                 <ul className="space-y-2 mb-6">
-                  {plan.features.map((f) => (
+                  {(plan.features as readonly string[]).map((f) => (
                     <li key={f} className={`text-xs flex items-center gap-2 ${plan.highlight ? 'text-gray-300' : 'text-gray-600'}`}>
-                      <span className={`w-1 h-1 rounded-full ${plan.highlight ? 'bg-gray-400' : 'bg-gray-400'}`} />
+                      <span className="w-1 h-1 rounded-full bg-gray-400" />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <a
-                  href="https://www.etsy.com"
+                  href={ETSY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block text-center text-sm font-medium py-2.5 rounded-full transition-colors ${
@@ -197,7 +208,7 @@ export default function HomePage() {
                       : 'border border-gray-200 text-gray-700 hover:border-gray-400'
                   }`}
                 >
-                  Order on Etsy
+                  {c.buy_etsy}
                 </a>
               </div>
             ))}
@@ -207,17 +218,15 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="py-20 text-center px-6">
-        <h2 className="text-4xl font-bold mb-4">Ready to capture every moment?</h2>
-        <p className="text-gray-500 mb-8 max-w-md mx-auto">
-          Join couples who chose MemoryBanner to collect their wedding memories.
-        </p>
+        <h2 className="text-4xl font-bold mb-4">{c.cta_h2}</h2>
+        <p className="text-gray-500 mb-8 max-w-md mx-auto">{c.cta_sub}</p>
         <a
-          href="https://www.etsy.com"
+          href={ETSY_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block bg-black text-white px-10 py-4 rounded-full font-medium hover:bg-gray-800 transition-colors"
         >
-          Get yours on Etsy
+          {c.cta_btn}
         </a>
       </section>
 
@@ -226,7 +235,7 @@ export default function HomePage() {
         <div className="flex items-center justify-center gap-1 mb-2">
           <span className="font-semibold text-gray-900">MemoryBanner</span>
         </div>
-        <p>© {new Date().getFullYear()} MemoryBanner. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} MemoryBanner. {c.footer_rights}</p>
       </footer>
     </div>
   )
