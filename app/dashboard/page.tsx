@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase'
+import { createServerSupabase } from '@/lib/supabase-server'
 import { createServiceClient } from '@/lib/supabase'
 import { Order, PLAN_LIMITS } from '@/types'
 import Link from 'next/link'
