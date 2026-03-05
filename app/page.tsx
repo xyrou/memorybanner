@@ -2,9 +2,7 @@ import { QrCode, Camera, Heart, Users, Globe, Shield } from 'lucide-react'
 import { lt, LANDING_LANGS, LandingLang } from '@/lib/landing-i18n'
 import Link from 'next/link'
 
-const ETSY_URL = 'https://www.etsy.com'
-
-export function generateMetadata({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
+export function generateMetadata() {
   return {
     title: 'MemoryBanner — Wedding Photo Gallery via QR Code',
     description:
@@ -67,14 +65,12 @@ export default async function HomePage({
               </Link>
             ))}
           </div>
-          <a
-            href={ETSY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/auth/signup"
             className="text-sm font-medium bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors"
           >
             {c.nav_buy}
-          </a>
+          </Link>
         </div>
       </nav>
 
@@ -92,20 +88,18 @@ export default async function HomePage({
           {c.hero_sub}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a
-            href={ETSY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/auth/signup"
             className="bg-black text-white px-8 py-3.5 rounded-full font-medium hover:bg-gray-800 transition-colors"
           >
             {c.hero_cta}
-          </a>
-          <a
-            href="#how-it-works"
+          </Link>
+          <Link
+            href="/demo"
             className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-full font-medium hover:border-gray-400 transition-colors"
           >
             {c.hero_alt}
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -114,10 +108,7 @@ export default async function HomePage({
         <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100 text-center">
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square bg-gray-200 rounded-xl"
-              />
+              <div key={i} className="aspect-square bg-gray-200 rounded-xl" />
             ))}
           </div>
           <p className="text-sm text-gray-400 flex items-center justify-center gap-1.5">
@@ -167,7 +158,7 @@ export default async function HomePage({
       </section>
 
       {/* Pricing */}
-      <section className="bg-gray-50 py-20">
+      <section id="pricing" className="bg-gray-50 py-20">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center mb-3">{c.price_h2}</h2>
           <p className="text-gray-500 text-center mb-12">{c.price_sub}</p>
@@ -198,10 +189,8 @@ export default async function HomePage({
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={ETSY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/auth/signup"
                   className={`block text-center text-sm font-medium py-2.5 rounded-full transition-colors ${
                     plan.highlight
                       ? 'bg-white text-black hover:bg-gray-100'
@@ -209,7 +198,7 @@ export default async function HomePage({
                   }`}
                 >
                   {c.buy_etsy}
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -220,14 +209,12 @@ export default async function HomePage({
       <section className="py-20 text-center px-6">
         <h2 className="text-4xl font-bold mb-4">{c.cta_h2}</h2>
         <p className="text-gray-500 mb-8 max-w-md mx-auto">{c.cta_sub}</p>
-        <a
-          href={ETSY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/auth/signup"
           className="inline-block bg-black text-white px-10 py-4 rounded-full font-medium hover:bg-gray-800 transition-colors"
         >
           {c.cta_btn}
-        </a>
+        </Link>
       </section>
 
       {/* Footer */}
