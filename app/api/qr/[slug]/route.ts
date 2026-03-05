@@ -34,7 +34,7 @@ export async function GET(
   }
 
   const buffer = await generateQRPng(slug)
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'image/png',
       'Content-Disposition': `attachment; filename="${slug}-qr.png"`,
