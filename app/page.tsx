@@ -47,11 +47,11 @@ export default async function HomePage({
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
       {/* Nav */}
-      <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-5xl mx-auto">
+      <nav className="border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-2 max-w-5xl mx-auto">
         <span className="font-bold text-lg tracking-tight">MemoryBanner</span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Language switcher */}
-          <div className="flex items-center">
+          <div className="hidden sm:flex items-center">
             {LANDING_LANGS.map((l, i) => (
               <span key={l.code} className="flex items-center">
                 {i > 0 && <span className="text-gray-200 text-xs">·</span>}
@@ -70,7 +70,7 @@ export default async function HomePage({
           </div>
           <Link
             href="/auth/signup"
-            className="text-sm font-medium bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors"
+            className="text-xs sm:text-sm font-medium bg-black text-white px-3 sm:px-4 py-2 rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap"
           >
             {c.nav_buy}
           </Link>
@@ -78,12 +78,12 @@ export default async function HomePage({
       </nav>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
           <QrCode size={12} />
           {c.hero_badge}
         </div>
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight mb-6">
+        <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-tight mb-6">
           {c.hero_h1a}<br />
           <span className="text-gray-400">{c.hero_h1b}</span>
         </h1>
@@ -93,13 +93,13 @@ export default async function HomePage({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/auth/signup"
-            className="bg-black text-white px-8 py-3.5 rounded-full font-medium hover:bg-gray-800 transition-colors"
+            className="w-full sm:w-auto bg-black text-white px-8 py-3.5 rounded-full font-medium hover:bg-gray-800 transition-colors"
           >
             {c.hero_cta}
           </Link>
           <Link
             href="/demo"
-            className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-full font-medium hover:border-gray-400 transition-colors"
+            className="w-full sm:w-auto border border-gray-200 text-gray-700 px-8 py-3.5 rounded-full font-medium hover:border-gray-400 transition-colors"
           >
             {c.hero_alt}
           </Link>

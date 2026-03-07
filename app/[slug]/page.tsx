@@ -323,7 +323,7 @@ export default function GalleryPage() {
       )}
 
       {/* Upload buttons */}
-      <div className="max-w-2xl mx-auto px-4 py-4 flex gap-3">
+      <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col sm:flex-row gap-3">
         <button
           onClick={() => !photoFull && photoInputRef.current?.click()}
           disabled={uploading || photoFull}

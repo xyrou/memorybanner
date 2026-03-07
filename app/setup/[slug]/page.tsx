@@ -367,7 +367,7 @@ export default function SetupPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setStep(1)}
                 className="flex items-center gap-1 border border-gray-200 rounded-xl px-4 py-3 text-sm hover:bg-gray-50 transition-colors"
@@ -408,7 +408,7 @@ export default function SetupPage() {
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setStep(2)}
                 className="flex items-center gap-1 border border-gray-200 rounded-xl px-4 py-3 text-sm hover:bg-gray-50 transition-colors"

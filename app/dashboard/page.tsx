@@ -35,17 +35,19 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Nav */}
-      <nav className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
+      <nav className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-3 max-w-4xl mx-auto">
         <Link href="/" className="font-bold text-lg tracking-tight text-gray-900">
           MemoryBanner
         </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{user.email}</span>
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-sm text-gray-500 truncate max-w-[140px] sm:max-w-[260px]">
+            {user.email}
+          </span>
           <SignOutButton />
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         {order ? (
           /* Has an order */
           <div className="space-y-6">
@@ -56,7 +58,7 @@ export default async function DashboardPage() {
 
             {/* Gallery card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">{order.couple_names}</h2>
                   <p className="text-sm text-gray-500 mt-0.5">
@@ -72,7 +74,7 @@ export default async function DashboardPage() {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                 <div className="bg-gray-50 rounded-xl p-4 text-center">
                   <Camera size={20} className="mx-auto mb-1 text-gray-400" />
                   <div className="text-2xl font-bold text-gray-900">{order.photo_count}</div>
@@ -97,7 +99,7 @@ export default async function DashboardPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
                 {order.is_setup ? (
                   <Link
                     href={`/${order.slug}`}
