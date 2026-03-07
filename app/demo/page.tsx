@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Camera, Video, Heart, Send, X, Play, User } from 'lucide-react'
+import { Camera, Video, Heart, Send, X, User } from 'lucide-react'
 
 type ThemeKey = 'romantic' | 'noir' | 'golden' | 'garden' | 'burgundy' | 'sage'
 

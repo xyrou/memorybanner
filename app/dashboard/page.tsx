@@ -3,7 +3,7 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import { createServiceClient } from '@/lib/supabase'
 import { Order, PLAN_LIMITS } from '@/types'
 import Link from 'next/link'
-import { Camera, QrCode, Heart, ArrowRight, LogOut } from 'lucide-react'
+import { Camera, QrCode, Heart, ArrowRight } from 'lucide-react'
 import SignOutButton from './sign-out-button'
 
 export default async function DashboardPage() {
@@ -22,6 +22,15 @@ export default async function DashboardPage() {
 
   const order: Order | null = orders?.[0] ?? null
   const plan = order ? PLAN_LIMITS[order.plan as keyof typeof PLAN_LIMITS] : null
+  const now = new Date().getTime()
+  const planBadgeStyles: Record<string, string> = {
+    starter: 'bg-gray-100 text-gray-600',
+    silver: 'bg-slate-100 text-slate-700',
+    gold: 'bg-amber-100 text-amber-700',
+    premium: 'bg-blue-100 text-blue-700',
+    free: 'bg-gray-100 text-gray-600',
+    premium_plus: 'bg-blue-100 text-blue-700',
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,13 +66,7 @@ export default async function DashboardPage() {
                     {order.location && ` · ${order.location}`}
                   </p>
                 </div>
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                  order.plan === 'premium_plus'
-                    ? 'bg-purple-100 text-purple-700'
-                    : order.plan === 'premium'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${planBadgeStyles[order.plan] ?? 'bg-gray-100 text-gray-600'}`}>
                   {plan?.label}
                 </span>
               </div>
@@ -81,7 +84,7 @@ export default async function DashboardPage() {
                   <Heart size={20} className="mx-auto mb-1 text-gray-400" />
                   <div className="text-2xl font-bold text-gray-900">
                     {Math.max(0, Math.ceil(
-                      (new Date(order.expires_at).getTime() - Date.now()) / 86400000
+                      (new Date(order.expires_at).getTime() - now) / 86400000
                     ))}
                   </div>
                   <div className="text-xs text-gray-500">days left</div>
@@ -111,7 +114,7 @@ export default async function DashboardPage() {
                   </Link>
                 )}
 
-                {order.plan === 'free' && (
+                {order.plan !== 'premium' && order.plan !== 'premium_plus' && (
                   <button
                     disabled
                     className="flex-1 border border-gray-200 text-gray-400 rounded-xl py-3 text-sm font-medium cursor-not-allowed"

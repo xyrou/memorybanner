@@ -193,7 +193,7 @@ export default function GalleryPage() {
   const s = THEMES[order?.template ?? 'romantic']
   const photos = media.filter((m) => m.type === 'photo')
   const videos = media.filter((m) => m.type === 'video')
-  const limits = PLAN_LIMITS[order?.plan ?? 'free']
+  const limits = PLAN_LIMITS[order?.plan ?? 'starter']
   const photoFull = limits.photos !== Infinity && photos.length >= limits.photos
   const videoFull = limits.videos === 0 || (limits.videos !== Infinity && videos.length >= limits.videos)
   const usagePercent = Math.max(
@@ -316,7 +316,7 @@ export default function GalleryPage() {
       </div>
 
       {/* Upgrade banner */}
-      {usagePercent >= 80 && order.plan !== 'premium_plus' && (
+      {usagePercent >= 80 && order.plan !== 'premium' && order.plan !== 'premium_plus' && (
         <div className="bg-amber-500 text-white text-center text-sm py-2 px-4 font-medium">
           {t(lang, 'upgrade_banner')} · {t(lang, 'upgrade_cta')}
         </div>
@@ -531,7 +531,7 @@ export default function GalleryPage() {
       {showNamePrompt && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className={`${s.card} rounded-2xl p-6 w-full max-w-sm shadow-2xl border ${s.cardBorder}`}>
-            <h2 className={`text-lg font-semibold mb-1 ${s.text}`}>What's your name?</h2>
+            <h2 className={`text-lg font-semibold mb-1 ${s.text}`}>What&apos;s your name?</h2>
             <p className={`text-sm mb-4 ${s.subtext}`}>So the couple knows who uploaded this.</p>
             <input
               type="text"

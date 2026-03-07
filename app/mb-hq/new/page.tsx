@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { ArrowLeft, Download, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { LANGUAGES } from '@/types'
@@ -9,7 +8,6 @@ import { useAdminSecret } from '../layout'
 
 export default function NewOrderPage() {
   const adminSecret = useAdminSecret()
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [created, setCreated] = useState<{ slug: string; setupUrl: string } | null>(null)
   const [copied, setCopied] = useState(false)

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Order, PLAN_LIMITS } from '@/types'
+import { Order } from '@/types'
 import { Download, Plus, ExternalLink } from 'lucide-react'
 import { useAdminSecret } from './layout'
 
@@ -34,15 +34,21 @@ export default function AdminPage() {
   }
 
   const planColors: Record<string, string> = {
-    free: 'bg-gray-100 text-gray-700',
+    starter: 'bg-gray-100 text-gray-700',
+    silver: 'bg-slate-100 text-slate-700',
+    gold: 'bg-amber-100 text-amber-700',
     premium: 'bg-blue-100 text-blue-700',
-    premium_plus: 'bg-purple-100 text-purple-700',
+    free: 'bg-gray-100 text-gray-700',
+    premium_plus: 'bg-blue-100 text-blue-700',
   }
 
   const planLabels: Record<string, string> = {
-    free: 'Free',
+    starter: 'Starter',
+    silver: 'Silver',
+    gold: 'Gold',
     premium: 'Premium',
-    premium_plus: 'Premium Plus',
+    free: 'Starter',
+    premium_plus: 'Premium',
   }
 
   return (
@@ -54,7 +60,7 @@ export default function AdminPage() {
             <p className="text-gray-500 text-sm mt-1">Sipariş yönetimi ve QR kod üretimi</p>
           </div>
           <Link
-            href="/admin/new"
+            href="/mb-hq/new"
             className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
           >
             <Plus size={16} />
@@ -67,7 +73,7 @@ export default function AdminPage() {
         ) : orders.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             Henüz sipariş yok.{' '}
-            <Link href="/admin/new" className="text-black underline">
+            <Link href="/mb-hq/new" className="text-black underline">
               İlk siparişi oluştur
             </Link>
           </div>
@@ -87,8 +93,6 @@ export default function AdminPage() {
               </thead>
               <tbody>
                 {orders.map((order) => {
-                  const expires = new Date(order.expires_at)
-                  const daysLeft = Math.ceil((expires.getTime() - Date.now()) / 86400000)
                   return (
                     <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                       <td className="px-4 py-3">
@@ -102,9 +106,9 @@ export default function AdminPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full ${planColors[order.plan]}`}
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${planColors[order.plan] ?? 'bg-gray-100 text-gray-700'}`}
                         >
-                          {planLabels[order.plan]}
+                          {planLabels[order.plan] ?? order.plan}
                         </span>
                       </td>
                       <td className="px-4 py-3">

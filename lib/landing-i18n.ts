@@ -42,18 +42,22 @@ const T = {
     f6_desc: 'Only people with your QR code can access your gallery.',
     price_h2: 'Simple pricing',
     price_sub: 'Choose the plan that fits your wedding',
-    plan_free: 'Free',
-    plan_free_price: 'Included',
-    plan_free_desc: 'Perfect for small gatherings',
-    plan_free_f: ['20 photos', 'No videos', '30-day access', 'All templates', 'Guestbook'],
-    plan_premium: 'Premium',
-    plan_premium_price: '$13',
-    plan_premium_desc: 'Most popular choice',
-    plan_premium_f: ['Unlimited photos', '5 videos', '1-year access', 'All templates', 'Guestbook'],
-    plan_plus: 'Premium+',
-    plan_plus_price: '$99',
-    plan_plus_desc: 'For the big celebration',
-    plan_plus_f: ['Unlimited photos', 'Unlimited videos', '3-year access', 'All templates', 'Guestbook', 'Priority support'],
+    plan_starter: 'Starter',
+    plan_starter_price: 'Starter',
+    plan_starter_desc: 'Great for intimate weddings',
+    plan_starter_f: ['10 photos', 'No videos', '14-day access', 'Standard template'],
+    plan_silver: 'Silver',
+    plan_silver_price: 'Silver',
+    plan_silver_desc: 'Balanced plan for most weddings',
+    plan_silver_f: ['50 photos', '5 videos', '30-day access', '3 templates'],
+    plan_gold: 'Gold',
+    plan_gold_price: 'Gold',
+    plan_gold_desc: 'For bigger celebrations',
+    plan_gold_f: ['100 photos', '20 videos', '30-day access', 'All templates', 'Guestbook'],
+    plan_premium_tier: 'Premium',
+    plan_premium_tier_price: 'Premium',
+    plan_premium_tier_desc: 'Maximum capacity for high-volume events',
+    plan_premium_tier_f: ['250 photos', '50 videos', '2-month access', 'All templates', 'Guestbook'],
     cta_h2: 'Ready to capture every moment?',
     cta_sub: 'Join couples who chose MemoryBanner to collect their wedding memories.',
     cta_btn: 'Create free account',
@@ -269,5 +273,5 @@ const T = {
 export type LandingT = typeof T.en
 
 export function lt(lang: LandingLang): LandingT {
-  return (T[lang] ?? T.en) as unknown as LandingT
+  return { ...T.en, ...(T[lang] ?? {}) } as LandingT
 }

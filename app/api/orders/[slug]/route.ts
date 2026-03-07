@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 
+const PUBLIC_TEMPLATE_VALUES = ['romantic', 'noir', 'golden', 'garden', 'burgundy', 'sage'] as const
+const PUBLIC_PATCH_FIELDS = ['template', 'location', 'cover_photo_url', 'is_setup'] as const
+const ADMIN_PATCH_FIELDS = [
+  'auto_upgrade_to_premium',
+  'auto_upgrade_to_plus',
+  'stripe_customer_id',
+  'stripe_payment_method_id',
+  'plan',
+  'expires_at',
+] as const
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -9,7 +20,7 @@ export async function GET(
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('orders')
-    .select('*')
+    .select('id,slug,couple_names,event_date,plan,photo_count,video_count,is_setup,template,cover_photo_url,location,language,expires_at,created_at')
     .eq('slug', slug)
     .single()
 
@@ -24,13 +35,37 @@ export async function PATCH(
   const { slug } = await params
   const supabase = createServiceClient()
   const body = await req.json()
-  const allowed = ['template', 'location', 'cover_photo_url', 'is_setup',
-                   'auto_upgrade_to_premium', 'auto_upgrade_to_plus',
-                   'stripe_customer_id', 'stripe_payment_method_id', 'plan', 'expires_at']
+  const isAdmin = req.headers.get('x-admin-secret') === process.env.ADMIN_SECRET
 
   const update: Record<string, unknown> = {}
-  for (const key of allowed) {
+  for (const key of PUBLIC_PATCH_FIELDS) {
     if (key in body) update[key] = body[key]
+  }
+  if (isAdmin) {
+    for (const key of ADMIN_PATCH_FIELDS) {
+      if (key in body) update[key] = body[key]
+    }
+  } else {
+    const hasAdminFields = ADMIN_PATCH_FIELDS.some((key) => key in body)
+    if (hasAdminFields) {
+      return NextResponse.json({ error: 'Unauthorized field update' }, { status: 403 })
+    }
+  }
+
+  if ('template' in update && !PUBLIC_TEMPLATE_VALUES.includes(update.template as (typeof PUBLIC_TEMPLATE_VALUES)[number])) {
+    return NextResponse.json({ error: 'Invalid template' }, { status: 400 })
+  }
+  if ('location' in update && update.location !== null && typeof update.location !== 'string') {
+    return NextResponse.json({ error: 'Invalid location' }, { status: 400 })
+  }
+  if ('cover_photo_url' in update && update.cover_photo_url !== null && typeof update.cover_photo_url !== 'string') {
+    return NextResponse.json({ error: 'Invalid cover_photo_url' }, { status: 400 })
+  }
+  if ('is_setup' in update && typeof update.is_setup !== 'boolean') {
+    return NextResponse.json({ error: 'Invalid is_setup' }, { status: 400 })
+  }
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: 'No allowed fields provided' }, { status: 400 })
   }
 
   const { data, error } = await supabase

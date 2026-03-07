@@ -21,7 +21,7 @@ export async function POST(
 
   const limits = PLAN_LIMITS[order.plan as keyof typeof PLAN_LIMITS]
   if (limits.videos === 0) {
-    return NextResponse.json({ error: 'Videos not available on free plan' }, { status: 403 })
+    return NextResponse.json({ error: 'Videos not available on starter plan' }, { status: 403 })
   }
   if (limits.videos !== Infinity && order.video_count >= limits.videos) {
     return NextResponse.json({ error: 'Video limit reached' }, { status: 403 })

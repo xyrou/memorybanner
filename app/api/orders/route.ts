@@ -44,11 +44,11 @@ export async function POST(req: NextRequest) {
     attempts++
   }
 
-  const expires_at = getExpiresAt('free')
+  const expires_at = getExpiresAt('starter')
 
   const { data, error } = await supabase
     .from('orders')
-    .insert({ slug, couple_names, event_date, email, language, expires_at })
+    .insert({ slug, couple_names, event_date, email, language, plan: 'starter', expires_at })
     .select()
     .single()
 

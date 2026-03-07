@@ -1,8 +1,10 @@
 import { Plan, PLAN_LIMITS } from '@/types'
 
 export function getNextPlan(current: Plan): Plan | null {
-  if (current === 'free') return 'premium'
-  if (current === 'premium') return 'premium_plus'
+  if (current === 'free') return 'silver'
+  if (current === 'starter') return 'silver'
+  if (current === 'silver') return 'gold'
+  if (current === 'gold' || current === 'premium_plus') return 'premium'
   return null
 }
 

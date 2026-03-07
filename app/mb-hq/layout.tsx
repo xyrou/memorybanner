@@ -1,21 +1,17 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 const AdminSecretContext = createContext('')
 export const useAdminSecret = () => useContext(AdminSecretContext)
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [secret, setSecret] = useState('')
+  const [secret, setSecret] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return sessionStorage.getItem('admin_secret') ?? ''
+  })
   const [input, setInput] = useState('')
   const [error, setError] = useState(false)
-  const [checking, setChecking] = useState(true)
-
-  useEffect(() => {
-    const saved = sessionStorage.getItem('admin_secret')
-    if (saved) setSecret(saved)
-    setChecking(false)
-  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }
 
-  if (checking) return null
+  if (typeof window === 'undefined') return null
 
   if (!secret) {
     return (

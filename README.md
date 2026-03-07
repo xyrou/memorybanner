@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MemoryBanner
 
-## Getting Started
+MemoryBanner is a Next.js 16 app for wedding galleries:
+- Couples get a slug-based gallery page
+- Guests upload photos/videos and leave guestbook messages
+- Admin can create orders and download QR codes
 
-First, run the development server:
+Production domain: `https://memorybanner.com`
+
+## Stack
+
+- Next.js (App Router) + React 19 + TypeScript
+- Supabase (Auth + Postgres)
+- Cloudflare R2 (media storage)
+- Google OAuth (via Supabase Auth)
+- Stripe (library is present; payment flow is not fully wired yet)
+
+## Prerequisites
+
+- Node.js 20+
+- A Supabase project
+- A Cloudflare R2 bucket
+- A Google Cloud OAuth client (Web application)
+- Vercel project for deployment
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy env file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+3. Fill `.env.local`:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Cloudflare R2
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=memorybanner-media
+R2_PUBLIC_URL=
+
+# Stripe
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Resend
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+ADMIN_SECRET=
+```
+
+4. Create database schema in Supabase SQL editor with:
+- `supabase/schema.sql`
+
+5. Start dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Required Production Auth Settings
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Supabase -> Authentication -> URL Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Site URL:
+  - `https://www.memorybanner.com`
+- Redirect URLs:
+  - `https://memorybanner.com/auth/callback`
+  - `https://www.memorybanner.com/auth/callback`
 
-## Learn More
+### Google Cloud -> OAuth Client (Web)
 
-To learn more about Next.js, take a look at the following resources:
+- Authorized JavaScript origins:
+  - `https://memorybanner.com`
+  - `https://www.memorybanner.com`
+- Authorized redirect URI:
+  - `https://thcnyvrvtukzicaqvquk.supabase.co/auth/v1/callback`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Supabase -> Auth -> Providers -> Google
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Enable Google provider
+- Set Client ID and Client Secret from the same Google OAuth client above
 
-## Deploy on Vercel
+## Deploy (Vercel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push project to GitHub.
+2. Import repo in Vercel.
+3. Add all environment variables from `.env.local.example`.
+4. Set:
+   - `NEXT_PUBLIC_APP_URL=https://www.memorybanner.com`
+5. Deploy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If OAuth redirects to `localhost`, check Supabase URL Configuration first.
+
+## Admin
+
+- Admin interface route: `/mb-hq`
+- Protected by `ADMIN_SECRET` (stored in sessionStorage in browser)
+- Admin APIs expect `x-admin-secret` header
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+## Database Note (Template Constraint)
+
+Current app templates:
+- `romantic`, `noir`, `golden`, `garden`, `burgundy`, `sage`
+
+If your old DB still has `modern/rustic/minimal` constraint, run:
+
+```sql
+ALTER TABLE orders
+DROP CONSTRAINT IF EXISTS orders_template_check;
+
+ALTER TABLE orders
+ADD CONSTRAINT orders_template_check
+CHECK (template IN ('romantic', 'noir', 'golden', 'garden', 'burgundy', 'sage'));
+```

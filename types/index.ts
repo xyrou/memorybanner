@@ -1,4 +1,4 @@
-export type Plan = 'free' | 'premium' | 'premium_plus'
+export type Plan = 'starter' | 'silver' | 'gold' | 'premium' | 'free' | 'premium_plus'
 export type MediaType = 'photo' | 'video'
 export type Template = 'romantic' | 'noir' | 'golden' | 'garden' | 'burgundy' | 'sage'
 export type Language = 'en' | 'fr' | 'de' | 'it' | 'es'
@@ -55,26 +55,48 @@ export interface GuestbookEntry {
 }
 
 export const PLAN_LIMITS = {
-  free: {
-    photos: 20,
+  starter: {
+    photos: 10,
     videos: 0,
+    days: 14,
+    price: 0,
+    label: 'Starter',
+  },
+  silver: {
+    photos: 50,
+    videos: 5,
     days: 30,
     price: 0,
-    label: 'Free',
+    label: 'Silver',
+  },
+  gold: {
+    photos: 100,
+    videos: 20,
+    days: 30,
+    price: 0,
+    label: 'Gold',
   },
   premium: {
-    photos: Infinity,
-    videos: 5,
-    days: 365,
-    price: 13,
+    photos: 250,
+    videos: 50,
+    days: 60,
+    price: 0,
     label: 'Premium',
   },
+  // Backward compatibility for older records.
+  free: {
+    photos: 10,
+    videos: 0,
+    days: 14,
+    price: 0,
+    label: 'Starter',
+  },
   premium_plus: {
-    photos: Infinity,
-    videos: Infinity,
-    days: 1095, // 3 years
-    price: 99,
-    label: 'Premium Plus',
+    photos: 250,
+    videos: 50,
+    days: 60,
+    price: 0,
+    label: 'Premium',
   },
 } as const
 

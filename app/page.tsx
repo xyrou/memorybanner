@@ -23,9 +23,10 @@ export default async function HomePage({
   const c = lt(lang)
 
   const plans = [
-    { name: c.plan_free, price: c.plan_free_price, desc: c.plan_free_desc, features: c.plan_free_f, highlight: false },
-    { name: c.plan_premium, price: c.plan_premium_price, desc: c.plan_premium_desc, features: c.plan_premium_f, highlight: true },
-    { name: c.plan_plus, price: c.plan_plus_price, desc: c.plan_plus_desc, features: c.plan_plus_f, highlight: false },
+    { name: c.plan_starter, price: c.plan_starter_price, desc: c.plan_starter_desc, features: c.plan_starter_f, highlight: false },
+    { name: c.plan_silver, price: c.plan_silver_price, desc: c.plan_silver_desc, features: c.plan_silver_f, highlight: false },
+    { name: c.plan_gold, price: c.plan_gold_price, desc: c.plan_gold_desc, features: c.plan_gold_f, highlight: false },
+    { name: c.plan_premium_tier, price: c.plan_premium_tier_price, desc: c.plan_premium_tier_desc, features: c.plan_premium_tier_f, highlight: true },
   ]
 
   const features = [
@@ -164,7 +165,7 @@ export default async function HomePage({
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center mb-3">{c.price_h2}</h2>
           <p className="text-gray-500 text-center mb-12">{c.price_sub}</p>
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.name}
