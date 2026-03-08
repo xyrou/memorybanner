@@ -1,14 +1,19 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { createServiceClient } from '@/lib/supabase'
 import { Order, PLAN_LIMITS } from '@/types'
 import Link from 'next/link'
-import { Camera, QrCode, Heart, ArrowRight } from 'lucide-react'
+import { Camera, QrCode, Heart, ArrowRight, Link2, Unlink } from 'lucide-react'
 import SignOutButton from './sign-out-button'
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<{ canva?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
+  const params = await searchParams
 
   if (!user) redirect('/auth/login')
 
@@ -19,6 +24,24 @@ export default async function DashboardPage() {
     .select('*')
     .eq('email', user.email)
     .order('created_at', { ascending: false })
+
+  const { data: canvaConnection } = await service
+    .from('oauth_connections')
+    .select('id,expires_at')
+    .eq('provider', 'canva')
+    .eq('user_email', user.email)
+    .maybeSingle()
+
+  const canvaConnected = Boolean(canvaConnection)
+  const canvaStatusText: Record<string, string> = {
+    connected: 'Canva connected successfully.',
+    disconnected: 'Canva disconnected.',
+    config_error: 'Canva is not configured on this environment.',
+    denied: 'Canva connection was cancelled.',
+    invalid_state: 'Canva connection failed: invalid state.',
+    token_error: 'Canva connection failed at token step.',
+    db_error: 'Canva connection failed while saving token.',
+  }
 
   const order: Order | null = orders?.[0] ?? null
   const plan = order ? PLAN_LIMITS[order.plan as keyof typeof PLAN_LIMITS] : null
@@ -65,7 +88,7 @@ export default async function DashboardPage() {
                     {new Date(order.event_date).toLocaleDateString('en-US', {
                       year: 'numeric', month: 'long', day: 'numeric',
                     })}
-                    {order.location && ` · ${order.location}`}
+                    {order.location && ` - ${order.location}`}
                   </p>
                 </div>
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full ${planBadgeStyles[order.plan] ?? 'bg-gray-100 text-gray-600'}`}>
@@ -79,7 +102,7 @@ export default async function DashboardPage() {
                   <Camera size={20} className="mx-auto mb-1 text-gray-400" />
                   <div className="text-2xl font-bold text-gray-900">{order.photo_count}</div>
                   <div className="text-xs text-gray-500">
-                    {plan?.photos === Infinity ? '∞' : plan?.photos} photos
+                    {plan?.photos === Infinity ? 'Unlimited' : plan?.photos} photos
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 text-center">
@@ -125,6 +148,39 @@ export default async function DashboardPage() {
                     Upgrade Plan
                   </button>
                 )}
+              </div>
+
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Canva Integration</p>
+                    <p className="text-xs text-gray-500">
+                      {canvaConnected
+                        ? `Connected${canvaConnection?.expires_at ? ` (token expires ${new Date(canvaConnection.expires_at).toLocaleDateString('en-US')})` : ''}`
+                        : 'Not connected'}
+                    </p>
+                    {params.canva && canvaStatusText[params.canva] && (
+                      <p className="text-xs text-gray-500 mt-1">{canvaStatusText[params.canva]}</p>
+                    )}
+                  </div>
+                  {canvaConnected ? (
+                    <Link
+                      href="/api/integrations/canva/disconnect"
+                      className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
+                    >
+                      <Unlink size={14} />
+                      Disconnect Canva
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/api/integrations/canva/connect?return_to=/dashboard"
+                      className="inline-flex items-center justify-center gap-2 bg-black text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+                    >
+                      <Link2 size={14} />
+                      Connect Canva
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
 

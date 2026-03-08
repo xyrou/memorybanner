@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Order, Media, GuestbookEntry, PLAN_LIMITS } from '@/types'
 import { t } from '@/lib/i18n'
@@ -150,12 +150,29 @@ export default function GalleryPage() {
   const [media, setMedia] = useState<Media[]>([])
   const [guestbook, setGuestbook] = useState<GuestbookEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'photos' | 'videos' | 'guestbook'>('photos')
+  const [activeTab, setActiveTab] = useState<'photos' | 'videos' | 'guestbook' | 'rsvp'>('photos')
   const [lightbox, setLightbox] = useState<Media | null>(null)
   const [uploading, setUploading] = useState(false)
   const [guestName, setGuestName] = useState('')
   const [guestMessage, setGuestMessage] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
+  const [pinRequired, setPinRequired] = useState(false)
+  const [guestPin, setGuestPin] = useState('')
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [accessGranted, setAccessGranted] = useState(true)
+  const [activeAlbum, setActiveAlbum] = useState<string>('all')
+
+  // RSVP
+  const [rsvpName, setRsvpName] = useState('')
+  const [rsvpEmail, setRsvpEmail] = useState('')
+  const [rsvpAttending, setRsvpAttending] = useState<'yes' | 'no'>('yes')
+  const [rsvpPlusOne, setRsvpPlusOne] = useState(false)
+  const [rsvpMeal, setRsvpMeal] = useState('')
+  const [rsvpNote, setRsvpNote] = useState('')
+  const [sendingRsvp, setSendingRsvp] = useState(false)
+  const [rsvpSuccess, setRsvpSuccess] = useState('')
+  const [rsvpSummary, setRsvpSummary] = useState<{ total: number; attending: number; declined: number } | null>(null)
 
   // Uploader name (localStorage-backed, per slug)
   const [uploaderName, setUploaderName] = useState('')
@@ -169,19 +186,66 @@ export default function GalleryPage() {
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
+  const getGuestHeaders = useCallback((pin = guestPin): HeadersInit => (
+    pin ? { 'x-guest-pin': encodeURIComponent(pin) } : {}
+  ), [guestPin])
+
+  const fetchProtectedData = useCallback(async (pin = guestPin) => {
+    const headers = getGuestHeaders(pin)
+    const [mediaRes, guestbookRes, rsvpRes] = await Promise.all([
+      fetch(`/api/media/${slug}`, { headers }),
+      fetch(`/api/guestbook/${slug}`, { headers }),
+      fetch(`/api/rsvp/${slug}`, { headers }),
+    ])
+
+    if (mediaRes.status === 401 || guestbookRes.status === 401 || rsvpRes.status === 401) {
+      setAccessGranted(false)
+      setPinRequired(true)
+      return false
+    }
+
+    const [mediaData, gbData, rsvpData] = await Promise.all([
+      mediaRes.json(),
+      guestbookRes.json(),
+      rsvpRes.json(),
+    ])
+
+    setMedia(Array.isArray(mediaData) ? mediaData : [])
+    setGuestbook(Array.isArray(gbData) ? gbData : [])
+    setRsvpSummary(rsvpData?.summary ?? null)
+    setAccessGranted(true)
+    return true
+  }, [guestPin, slug, getGuestHeaders])
+
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/orders/${slug}`).then((r) => r.json()),
-      fetch(`/api/media/${slug}`).then((r) => r.json()),
-      fetch(`/api/guestbook/${slug}`).then((r) => r.json()),
-    ]).then(([orderData, mediaData, gbData]) => {
-      if (orderData.error) { router.push('/404'); return }
-      if (!orderData.is_setup) { router.push(`/setup/${slug}`); return }
-      setOrder(orderData)
-      setMedia(Array.isArray(mediaData) ? mediaData : [])
-      setGuestbook(Array.isArray(gbData) ? gbData : [])
-    }).finally(() => setLoading(false))
-  }, [slug, router])
+    const load = async () => {
+      try {
+        const orderData = await fetch(`/api/orders/${slug}`).then((r) => r.json())
+        if (orderData.error) { router.push('/404'); return }
+        if (!orderData.is_setup) { router.push(`/setup/${slug}`); return }
+
+        setOrder(orderData)
+        const needsPin = Boolean(orderData.pin_required)
+        setPinRequired(needsPin)
+
+        const savedPin = typeof window !== 'undefined'
+          ? localStorage.getItem(`mb_pin_${slug}`) ?? ''
+          : ''
+        if (savedPin) setGuestPin(savedPin)
+
+        if (needsPin && !savedPin) {
+          setAccessGranted(false)
+          return
+        }
+
+        await fetchProtectedData(savedPin)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+  }, [slug, router, fetchProtectedData])
 
   useEffect(() => {
     if (!slug) return
@@ -189,10 +253,43 @@ export default function GalleryPage() {
     if (saved) setUploaderName(saved)
   }, [slug])
 
+  const unlockWithPin = async () => {
+    const pin = pinInput.trim()
+    if (!/^\d{4,8}$/.test(pin)) {
+      setPinError('PIN must be 4-8 digits.')
+      return
+    }
+
+    setPinError('')
+    try {
+      const res = await fetch(`/api/access/${slug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      })
+
+      if (!res.ok) {
+        setPinError('Incorrect PIN')
+        return
+      }
+
+      localStorage.setItem(`mb_pin_${slug}`, pin)
+      setGuestPin(pin)
+      setPinInput('')
+      setPinError('')
+      await fetchProtectedData(pin)
+    } catch {
+      setPinError('Something went wrong. Please try again.')
+    }
+  }
+
   const lang = order?.language ?? 'en'
   const s = THEMES[order?.template ?? 'romantic']
   const photos = media.filter((m) => m.type === 'photo')
   const videos = media.filter((m) => m.type === 'video')
+  const albums = Array.from(
+    new Set(photos.map((photo) => photo.album_name || 'General'))
+  )
   const limits = PLAN_LIMITS[order?.plan ?? 'starter']
   const photoFull = limits.photos !== Infinity && photos.length >= limits.photos
   const videoFull = limits.videos === 0 || (limits.videos !== Infinity && videos.length >= limits.videos)
@@ -209,23 +306,35 @@ export default function GalleryPage() {
     }, {})
   ).sort((a, b) => b[1] - a[1])
 
+  const photosByAlbum = activeAlbum === 'all'
+    ? photos
+    : photos.filter((photo) => (photo.album_name || 'General') === activeAlbum)
+
   const visiblePhotos = activeContributor
-    ? photos.filter((p) => (p.uploaded_by || 'Guest') === activeContributor)
-    : photos
+    ? photosByAlbum.filter((p) => (p.uploaded_by || 'Guest') === activeContributor)
+    : photosByAlbum
 
   const doUpload = async (file: File, type: 'photo' | 'video', name: string) => {
     setUploading(true)
     try {
+      const uploadAlbum = activeAlbum === 'all' ? 'General' : activeAlbum
       const res = await fetch(`/api/upload/${type}/${slug}`, {
         method: 'POST',
         headers: {
+          ...getGuestHeaders(),
           'Content-Type': file.type,
           'x-filename': encodeURIComponent(file.name),
           'x-filesize': String(file.size),
           'x-guest-name': encodeURIComponent(name),
+          'x-album': encodeURIComponent(uploadAlbum),
         },
         body: file,
       })
+      if (res.status === 401) {
+        setPinRequired(true)
+        setAccessGranted(false)
+        return
+      }
       const data = await res.json()
       if (data.url) setMedia((prev) => [...prev, data])
     } finally {
@@ -263,11 +372,18 @@ export default function GalleryPage() {
     try {
       const res = await fetch(`/api/guestbook/${slug}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getGuestHeaders() },
         body: JSON.stringify({ guest_name: guestName, message: guestMessage }),
       })
+      if (res.status === 401) {
+        setPinRequired(true)
+        setAccessGranted(false)
+        return
+      }
       const entry = await res.json()
-      setGuestbook((prev) => [entry, ...prev])
+      if (entry?.is_approved) {
+        setGuestbook((prev) => [entry, ...prev])
+      }
       setGuestName('')
       setGuestMessage('')
     } finally {
@@ -275,9 +391,51 @@ export default function GalleryPage() {
     }
   }
 
+  const handleRsvpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!rsvpName.trim()) return
+
+    setSendingRsvp(true)
+    setRsvpSuccess('')
+    try {
+      const res = await fetch(`/api/rsvp/${slug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getGuestHeaders() },
+        body: JSON.stringify({
+          guest_name: rsvpName,
+          email: rsvpEmail || null,
+          attending: rsvpAttending === 'yes',
+          plus_one: rsvpPlusOne,
+          meal_preference: rsvpMeal || null,
+          note: rsvpNote || null,
+        }),
+      })
+
+      if (res.status === 401) {
+        setPinRequired(true)
+        setAccessGranted(false)
+        return
+      }
+
+      if (!res.ok) return
+
+      setRsvpName('')
+      setRsvpEmail('')
+      setRsvpAttending('yes')
+      setRsvpPlusOne(false)
+      setRsvpMeal('')
+      setRsvpNote('')
+      setRsvpSuccess('Thanks! Your RSVP has been submitted.')
+      await fetchProtectedData()
+    } finally {
+      setSendingRsvp(false)
+    }
+  }
+
   const daysLeft = order
     ? Math.max(0, Math.ceil((new Date(order.expires_at).getTime() - Date.now()) / 86400000))
     : 0
+  const isLocked = pinRequired && !accessGranted
 
   if (loading) {
     return (
@@ -309,7 +467,7 @@ export default function GalleryPage() {
             <p className="text-sm sm:text-base opacity-90 drop-shadow">
               {new Date(order.event_date).toLocaleDateString(lang === 'en' ? 'en-US' : lang, {
                 year: 'numeric', month: 'long', day: 'numeric',
-              })} · {order.location}
+              })} - {order.location}
             </p>
           )}
         </div>
@@ -318,15 +476,15 @@ export default function GalleryPage() {
       {/* Upgrade banner */}
       {usagePercent >= 80 && order.plan !== 'premium' && order.plan !== 'premium_plus' && (
         <div className="bg-amber-500 text-white text-center text-sm py-2 px-4 font-medium">
-          {t(lang, 'upgrade_banner')} · {t(lang, 'upgrade_cta')}
+          {t(lang, 'upgrade_banner')} - {t(lang, 'upgrade_cta')}
         </div>
       )}
 
       {/* Upload buttons */}
       <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col sm:flex-row gap-3">
         <button
-          onClick={() => !photoFull && photoInputRef.current?.click()}
-          disabled={uploading || photoFull}
+          onClick={() => !isLocked && !photoFull && photoInputRef.current?.click()}
+          disabled={isLocked || uploading || photoFull}
           className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-all ${s.radius} ${
             photoFull
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -340,8 +498,8 @@ export default function GalleryPage() {
           )}
         </button>
         <button
-          onClick={() => !videoFull && videoInputRef.current?.click()}
-          disabled={uploading || videoFull}
+          onClick={() => !isLocked && !videoFull && videoInputRef.current?.click()}
+          disabled={isLocked || uploading || videoFull}
           className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-all border ${s.radius} ${
             videoFull
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-200'
@@ -355,15 +513,15 @@ export default function GalleryPage() {
           )}
         </button>
         <input ref={photoInputRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'photo')} />
+          onChange={(e) => !isLocked && e.target.files?.[0] && handleUpload(e.target.files[0], 'photo')} />
         <input ref={videoInputRef} type="file" accept="video/*" className="hidden"
-          onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'video')} />
+          onChange={(e) => !isLocked && e.target.files?.[0] && handleUpload(e.target.files[0], 'video')} />
       </div>
 
       {/* Tabs */}
       <div className="max-w-2xl mx-auto px-4">
         <div className={`flex border-b ${s.divider}`}>
-          {(['photos', 'videos', 'guestbook'] as const).map((tab) => (
+          {(['photos', 'videos', 'guestbook', 'rsvp'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -375,7 +533,8 @@ export default function GalleryPage() {
             >
               {tab === 'photos' ? `${t(lang, 'photos')} (${photos.length})`
                : tab === 'videos' ? `${t(lang, 'videos')} (${videos.length})`
-               : t(lang, 'guestbook')}
+               : tab === 'guestbook' ? t(lang, 'guestbook')
+               : `RSVP${rsvpSummary ? ` (${rsvpSummary.total})` : ''}`}
             </button>
           ))}
         </div>
@@ -383,10 +542,44 @@ export default function GalleryPage() {
 
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 py-6">
+        {isLocked && (
+          <div className={`${s.card} border ${s.cardBorder} ${s.radius} p-6 text-center`}>
+            <p className={`text-sm ${s.text}`}>This gallery is PIN protected.</p>
+            <p className={`text-xs mt-2 ${s.subtext}`}>Enter the PIN to view photos, RSVP, and leave messages.</p>
+          </div>
+        )}
 
         {/* Photos tab */}
-        {activeTab === 'photos' && (
+        {!isLocked && activeTab === 'photos' && (
           <div>
+            {/* Albums strip */}
+            <div className="mb-4">
+              <p className={`text-xs font-medium uppercase tracking-widest mb-2 ${s.subtext}`}>
+                Albums
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                <button
+                  onClick={() => setActiveAlbum('all')}
+                  className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${s.radius} ${
+                    activeAlbum === 'all' ? s.chipActive : s.chipInactive
+                  }`}
+                >
+                  All
+                </button>
+                {albums.map((album) => (
+                  <button
+                    key={album}
+                    onClick={() => setActiveAlbum(album)}
+                    className={`px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${s.radius} ${
+                      activeAlbum === album ? s.chipActive : s.chipInactive
+                    }`}
+                  >
+                    {album}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Contributors strip */}
             {contributors.length > 0 && (
               <div className="mb-4">
@@ -400,7 +593,7 @@ export default function GalleryPage() {
                       activeContributor === null ? s.chipActive : s.chipInactive
                     }`}
                   >
-                    All · {photos.length}
+                    All - {photos.length}
                   </button>
                   {contributors.map(([name, count]) => (
                     <button
@@ -411,7 +604,7 @@ export default function GalleryPage() {
                       }`}
                     >
                       <User size={10} />
-                      {name} · {count}
+                      {name} - {count}
                     </button>
                   ))}
                 </div>
@@ -449,7 +642,7 @@ export default function GalleryPage() {
         )}
 
         {/* Videos grid */}
-        {activeTab === 'videos' && (
+        {!isLocked && activeTab === 'videos' && (
           videos.length === 0 ? (
             <div className={`text-center py-16 ${s.subtext}`}>
               <Video size={40} className="mx-auto mb-3 opacity-30" />
@@ -480,7 +673,7 @@ export default function GalleryPage() {
         )}
 
         {/* Guestbook */}
-        {activeTab === 'guestbook' && (
+        {!isLocked && activeTab === 'guestbook' && (
           <div className="space-y-6">
             <form onSubmit={handleGuestbookSubmit} className={`${s.card} border ${s.cardBorder} ${s.radius} p-5 space-y-3`}>
               <h3 className={`text-sm font-semibold ${s.text}`}>{t(lang, 'leave_message')}</h3>
@@ -520,12 +713,129 @@ export default function GalleryPage() {
             </div>
           </div>
         )}
+
+        {/* RSVP */}
+        {!isLocked && activeTab === 'rsvp' && (
+          <div className="space-y-4">
+            {rsvpSummary && (
+              <div className={`${s.card} border ${s.cardBorder} ${s.radius} p-4 grid grid-cols-3 gap-3 text-center`}>
+                <div>
+                  <p className={`text-xl font-semibold ${s.text}`}>{rsvpSummary.total}</p>
+                  <p className={`text-xs ${s.subtext}`}>Total</p>
+                </div>
+                <div>
+                  <p className={`text-xl font-semibold ${s.text}`}>{rsvpSummary.attending}</p>
+                  <p className={`text-xs ${s.subtext}`}>Attending</p>
+                </div>
+                <div>
+                  <p className={`text-xl font-semibold ${s.text}`}>{rsvpSummary.declined}</p>
+                  <p className={`text-xs ${s.subtext}`}>Declined</p>
+                </div>
+              </div>
+            )}
+            <form onSubmit={handleRsvpSubmit} className={`${s.card} border ${s.cardBorder} ${s.radius} p-5 space-y-3`}>
+              <h3 className={`text-sm font-semibold ${s.text}`}>RSVP</h3>
+              <input
+                type="text"
+                placeholder="Your name"
+                value={rsvpName}
+                onChange={(e) => setRsvpName(e.target.value)}
+                className={`w-full border ${s.inputBase} ${s.inputFocus} rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2`}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email (optional)"
+                value={rsvpEmail}
+                onChange={(e) => setRsvpEmail(e.target.value)}
+                className={`w-full border ${s.inputBase} ${s.inputFocus} rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2`}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRsvpAttending('yes')}
+                  className={`flex-1 py-2 text-sm ${s.radius} ${rsvpAttending === 'yes' ? `${s.accent} ${s.accentText}` : `${s.card} border ${s.cardBorder}`}`}
+                >
+                  Attending
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRsvpAttending('no')}
+                  className={`flex-1 py-2 text-sm ${s.radius} ${rsvpAttending === 'no' ? `${s.accent} ${s.accentText}` : `${s.card} border ${s.cardBorder}`}`}
+                >
+                  Not attending
+                </button>
+              </div>
+              <label className={`flex items-center gap-2 text-sm ${s.subtext}`}>
+                <input
+                  type="checkbox"
+                  checked={rsvpPlusOne}
+                  onChange={(e) => setRsvpPlusOne(e.target.checked)}
+                />
+                Bringing a plus one
+              </label>
+              <input
+                type="text"
+                placeholder="Meal preference (optional)"
+                value={rsvpMeal}
+                onChange={(e) => setRsvpMeal(e.target.value)}
+                className={`w-full border ${s.inputBase} ${s.inputFocus} rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2`}
+              />
+              <textarea
+                placeholder="Note (optional)"
+                value={rsvpNote}
+                onChange={(e) => setRsvpNote(e.target.value)}
+                rows={3}
+                className={`w-full border ${s.inputBase} ${s.inputFocus} rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none`}
+              />
+              <button
+                type="submit"
+                disabled={sendingRsvp}
+                className={`w-full ${s.accent} ${s.accentHover} ${s.accentText} px-4 py-2 ${s.radius} text-sm font-medium transition-all disabled:opacity-50`}
+              >
+                {sendingRsvp ? 'Submitting...' : 'Submit RSVP'}
+              </button>
+              {rsvpSuccess && <p className={`text-xs ${s.subtext}`}>{rsvpSuccess}</p>}
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
       <div className={`text-center py-6 text-xs ${s.subtext}`}>
-        {t(lang, 'expires_in')} {daysLeft} {t(lang, 'days')} · memorybanner.com
+        {t(lang, 'expires_in')} {daysLeft} {t(lang, 'days')} - memorybanner.com
       </div>
+
+      {/* PIN modal */}
+      {isLocked && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className={`${s.card} rounded-2xl p-6 w-full max-w-sm shadow-2xl border ${s.cardBorder}`}>
+            <h2 className={`text-lg font-semibold mb-1 ${s.text}`}>Enter gallery PIN</h2>
+            <p className={`text-sm mb-4 ${s.subtext}`}>
+              This gallery is protected. Ask the couple for the 4-8 digit PIN.
+            </p>
+            <input
+              type="password"
+              inputMode="numeric"
+              placeholder="PIN (4-8 digits)"
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && unlockWithPin()}
+              autoFocus
+              className={`w-full border ${s.inputBase} ${s.inputFocus} rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 mb-2`}
+            />
+            {pinError && (
+              <p className="text-xs text-red-500 mb-3">{pinError}</p>
+            )}
+            <button
+              onClick={unlockWithPin}
+              className={`w-full py-2.5 rounded-xl ${s.accent} ${s.accentHover} ${s.accentText} text-sm font-medium transition-all`}
+            >
+              Unlock
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Name prompt modal */}
       {showNamePrompt && (
@@ -595,3 +905,4 @@ export default function GalleryPage() {
     </div>
   )
 }
+

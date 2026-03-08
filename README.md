@@ -64,6 +64,12 @@ RESEND_FROM_EMAIL=
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ADMIN_SECRET=
+
+# Canva OAuth (Connect API)
+CANVA_CLIENT_ID=
+CANVA_CLIENT_SECRET=
+CANVA_REDIRECT_URI=http://localhost:3000/api/integrations/canva/callback
+CANVA_SCOPES=profile:read design:meta:read design:content:read design:content:write asset:read asset:write
 ```
 
 4. Create database schema in Supabase SQL editor with:
@@ -98,6 +104,14 @@ npm run dev
 - Enable Google provider
 - Set Client ID and Client Secret from the same Google OAuth client above
 
+### Canva Developers -> Integration -> Authentication
+
+- Redirect URL:
+  - `https://www.memorybanner.com/api/integrations/canva/callback`
+  - `http://localhost:3000/api/integrations/canva/callback` (optional for local)
+- Keep integration in draft/private while testing
+- Run OAuth once before submit for review
+
 ## Deploy (Vercel)
 
 1. Push project to GitHub.
@@ -105,6 +119,7 @@ npm run dev
 3. Add all environment variables from `.env.local.example`.
 4. Set:
    - `NEXT_PUBLIC_APP_URL=https://www.memorybanner.com`
+   - `CANVA_REDIRECT_URI=https://www.memorybanner.com/api/integrations/canva/callback`
 5. Deploy.
 
 If OAuth redirects to `localhost`, check Supabase URL Configuration first.

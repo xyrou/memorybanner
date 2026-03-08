@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
+import { hashPin, isValidPin } from '@/lib/pin'
 
 const PUBLIC_TEMPLATE_VALUES = ['romantic', 'noir', 'golden', 'garden', 'burgundy', 'sage'] as const
-const PUBLIC_PATCH_FIELDS = ['template', 'location', 'cover_photo_url', 'is_setup'] as const
+const PUBLIC_PATCH_FIELDS = [
+  'template',
+  'location',
+  'cover_photo_url',
+  'is_setup',
+  'pin_required',
+  'moderate_media',
+  'moderate_guestbook',
+] as const
 const ADMIN_PATCH_FIELDS = [
   'auto_upgrade_to_premium',
   'auto_upgrade_to_plus',
@@ -20,7 +29,7 @@ export async function GET(
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('orders')
-    .select('id,slug,couple_names,event_date,plan,photo_count,video_count,is_setup,template,cover_photo_url,location,language,expires_at,created_at')
+    .select('id,slug,couple_names,event_date,plan,photo_count,video_count,is_setup,template,cover_photo_url,location,language,pin_required,moderate_media,moderate_guestbook,expires_at,created_at')
     .eq('slug', slug)
     .single()
 
@@ -36,6 +45,7 @@ export async function PATCH(
   const supabase = createServiceClient()
   const body = await req.json()
   const isAdmin = req.headers.get('x-admin-secret') === process.env.ADMIN_SECRET
+  const providedAccessPin = typeof body.access_pin === 'string' ? body.access_pin.trim() : null
 
   const update: Record<string, unknown> = {}
   for (const key of PUBLIC_PATCH_FIELDS) {
@@ -52,6 +62,13 @@ export async function PATCH(
     }
   }
 
+  if (providedAccessPin !== null) {
+    if (providedAccessPin.length > 0 && !isValidPin(providedAccessPin)) {
+      return NextResponse.json({ error: 'Invalid access_pin. Use 4-8 numeric digits.' }, { status: 400 })
+    }
+    update.access_pin_hash = providedAccessPin.length > 0 ? hashPin(providedAccessPin) : null
+  }
+
   if ('template' in update && !PUBLIC_TEMPLATE_VALUES.includes(update.template as (typeof PUBLIC_TEMPLATE_VALUES)[number])) {
     return NextResponse.json({ error: 'Invalid template' }, { status: 400 })
   }
@@ -64,6 +81,31 @@ export async function PATCH(
   if ('is_setup' in update && typeof update.is_setup !== 'boolean') {
     return NextResponse.json({ error: 'Invalid is_setup' }, { status: 400 })
   }
+  if ('pin_required' in update && typeof update.pin_required !== 'boolean') {
+    return NextResponse.json({ error: 'Invalid pin_required' }, { status: 400 })
+  }
+  if ('moderate_media' in update && typeof update.moderate_media !== 'boolean') {
+    return NextResponse.json({ error: 'Invalid moderate_media' }, { status: 400 })
+  }
+  if ('moderate_guestbook' in update && typeof update.moderate_guestbook !== 'boolean') {
+    return NextResponse.json({ error: 'Invalid moderate_guestbook' }, { status: 400 })
+  }
+
+  if (update.pin_required === false) {
+    update.access_pin_hash = null
+  }
+
+  if (update.pin_required === true && !('access_pin_hash' in update)) {
+    const { data: existing } = await supabase
+      .from('orders')
+      .select('access_pin_hash')
+      .eq('slug', slug)
+      .single()
+    if (!existing?.access_pin_hash) {
+      return NextResponse.json({ error: 'access_pin is required when enabling pin protection' }, { status: 400 })
+    }
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'No allowed fields provided' }, { status: 400 })
   }

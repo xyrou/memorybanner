@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase'
 import { r2, getPublicUrl, getMediaKey } from '@/lib/r2'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { PLAN_LIMITS } from '@/types'
+import { hasOrderAccess } from '@/lib/guest-access'
 
 export async function POST(
   req: NextRequest,
@@ -18,6 +19,9 @@ export async function POST(
     .single()
 
   if (orderError || !order) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (!hasOrderAccess(req, order)) {
+    return NextResponse.json({ error: 'PIN required', requires_pin: true }, { status: 401 })
+  }
 
   const limits = PLAN_LIMITS[order.plan as keyof typeof PLAN_LIMITS]
   if (limits.photos !== Infinity && order.photo_count >= limits.photos) {
@@ -28,6 +32,8 @@ export async function POST(
   const filename = decodeURIComponent(req.headers.get('x-filename') || 'photo.jpg')
   const fileSize = parseInt(req.headers.get('x-filesize') || '0')
   const guestName = decodeURIComponent(req.headers.get('x-guest-name') || 'Guest')
+  const albumNameRaw = decodeURIComponent(req.headers.get('x-album') || 'General').trim()
+  const albumName = albumNameRaw.length > 0 ? albumNameRaw.slice(0, 40) : 'General'
   const body = await req.arrayBuffer()
 
   const key = getMediaKey(slug, 'photo', filename)
@@ -51,6 +57,9 @@ export async function POST(
       file_size: fileSize,
       original_name: filename,
       uploaded_by: guestName,
+      album_name: albumName,
+      is_approved: !order.moderate_media,
+      approved_at: order.moderate_media ? null : new Date().toISOString(),
     })
     .select()
     .single()

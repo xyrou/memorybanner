@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -28,7 +28,7 @@ const TEMPLATES: {
           <div className="w-7 h-5 rounded bg-rose-200/80" />
         </div>
         {/* Heart accent */}
-        <div className="absolute top-2 right-3 text-rose-400 text-xs">♥</div>
+        <div className="absolute top-2 right-3 text-rose-400 text-xs">*</div>
         <div className="absolute bottom-0 inset-x-0 px-3 py-2 bg-gradient-to-t from-rose-200/80">
           <span className="text-xs font-semibold text-rose-800 tracking-wide">Romantic</span>
         </div>
@@ -115,7 +115,7 @@ const TEMPLATES: {
         <div className="absolute -top-4 -left-4 w-20 h-20 rounded-full bg-rose-700/40 blur-xl" />
         <div className="absolute bottom-0 right-0 w-14 h-14 rounded-full bg-rose-600/30 blur-lg" />
         {/* Rose accent */}
-        <div className="absolute top-3 right-3 text-rose-400/80 text-sm">✦</div>
+        <div className="absolute top-3 right-3 text-rose-400/80 text-sm">+</div>
         {/* Mini photo grid */}
         <div className="absolute top-3 left-3 flex gap-1">
           <div className="w-7 h-5 rounded bg-rose-700/70" />
@@ -164,6 +164,10 @@ export default function SetupPage() {
 
   const [template, setTemplate] = useState<Template>('romantic')
   const [location, setLocation] = useState('')
+  const [pinRequired, setPinRequired] = useState(false)
+  const [accessPin, setAccessPin] = useState('')
+  const [moderateMedia, setModerateMedia] = useState(false)
+  const [moderateGuestbook, setModerateGuestbook] = useState(false)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
 
@@ -175,6 +179,10 @@ export default function SetupPage() {
         if (data.is_setup) { router.push(`/${slug}`); return }
         setOrder(data)
         setTemplate(data.template || 'romantic')
+        setLocation(data.location || '')
+        setPinRequired(Boolean(data.pin_required))
+        setModerateMedia(Boolean(data.moderate_media))
+        setModerateGuestbook(Boolean(data.moderate_guestbook))
       })
       .finally(() => setLoading(false))
   }, [slug, router])
@@ -190,6 +198,10 @@ export default function SetupPage() {
 
   const handleFinish = async () => {
     if (!order) return
+    if (pinRequired && !/^\d{4,8}$/.test(accessPin.trim())) {
+      alert('PIN must be 4-8 numeric digits.')
+      return
+    }
     setSaving(true)
     try {
       let coverUrl = null
@@ -203,16 +215,25 @@ export default function SetupPage() {
         coverUrl = uploadData.url
       }
 
-      await fetch(`/api/orders/${slug}`, {
+      const updateRes = await fetch(`/api/orders/${slug}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           template,
           location,
+          pin_required: pinRequired,
+          access_pin: pinRequired ? accessPin : '',
+          moderate_media: moderateMedia,
+          moderate_guestbook: moderateGuestbook,
           cover_photo_url: coverUrl,
           is_setup: true,
         }),
       })
+      if (!updateRes.ok) {
+        const err = await updateRes.json().catch(() => ({}))
+        alert(err.error || 'Could not save setup. Please try again.')
+        return
+      }
       setStep(4)
     } finally {
       setSaving(false)
@@ -249,7 +270,7 @@ export default function SetupPage() {
             onClick={() => { navigator.clipboard.writeText(galleryUrl); router.push(`/${slug}`) }}
             className="w-full bg-black text-white rounded-lg py-3 text-sm font-medium hover:bg-gray-800 transition-colors"
           >
-            {t(lang, 'copy_link')} & {t(lang, 'next')} →
+            {t(lang, 'copy_link')} & {t(lang, 'next')} {'->'}
           </button>
         </div>
       </div>
@@ -366,6 +387,44 @@ export default function SetupPage() {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400"
                 />
               </div>
+              <div className="border border-gray-200 rounded-lg p-3 space-y-3">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={pinRequired}
+                    onChange={(e) => setPinRequired(e.target.checked)}
+                  />
+                  Require a 4-8 digit PIN to enter this gallery
+                </label>
+                {pinRequired && (
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    placeholder="Set PIN (4-8 digits)"
+                    value={accessPin}
+                    onChange={(e) => setAccessPin(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400"
+                  />
+                )}
+              </div>
+              <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={moderateMedia}
+                    onChange={(e) => setModerateMedia(e.target.checked)}
+                  />
+                  Hold photo/video uploads for approval
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={moderateGuestbook}
+                    onChange={(e) => setModerateGuestbook(e.target.checked)}
+                  />
+                  Hold guestbook messages for approval
+                </label>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
@@ -433,3 +492,4 @@ export default function SetupPage() {
     </div>
   )
 }
+
