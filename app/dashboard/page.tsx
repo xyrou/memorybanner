@@ -48,6 +48,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   const order: Order | null = orders?.[0] ?? null
+  const { data: invitationPage } = order
+    ? await service
+      .from('invitation_pages')
+      .select('published_export_id')
+      .eq('order_id', order.id)
+      .maybeSingle()
+    : { data: null }
+  const hasPublishedInvitation = Boolean(invitationPage?.published_export_id)
   const plan = order ? PLAN_LIMITS[order.plan as keyof typeof PLAN_LIMITS] : null
   const now = new Date().getTime()
   const planBadgeStyles: Record<string, string> = {
@@ -140,6 +148,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     className="flex-1 flex items-center justify-center gap-2 bg-black text-white rounded-xl py-3 text-sm font-medium hover:bg-gray-800 transition-colors"
                   >
                     Set Up Gallery <ArrowRight size={14} />
+                  </Link>
+                )}
+
+                {hasPublishedInvitation && (
+                  <Link
+                    href={`/invite/${order.slug}`}
+                    className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium hover:border-gray-400 transition-colors"
+                  >
+                    View Invitation <ArrowRight size={14} />
                   </Link>
                 )}
 

@@ -13,11 +13,14 @@ type CanvaDesign = {
 
 type ImportedAsset = {
   id: string
+  order_id: string | null
   design_id: string
   design_title: string | null
   asset_url: string
   export_format: string
   created_at: string
+  is_draft?: boolean
+  is_published?: boolean
 }
 
 function sleep(ms: number) {
@@ -87,6 +90,7 @@ export function CanvaStudioClient() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [message, setMessage] = useState('')
   const [importingDesignId, setImportingDesignId] = useState('')
+  const [publishingImportId, setPublishingImportId] = useState('')
   const [imports, setImports] = useState<ImportedAsset[]>([])
 
   const canLoadMore = useMemo(() => Boolean(continuation), [continuation])
@@ -95,8 +99,13 @@ export function CanvaStudioClient() {
     [message]
   )
 
-  const loadImports = async () => {
-    const res = await fetch('/api/integrations/canva/imports')
+  const loadImports = async (slugFilter?: string) => {
+    const params = new URLSearchParams()
+    const normalizedSlug = (slugFilter ?? slug).trim()
+    if (normalizedSlug) params.set('slug', normalizedSlug)
+
+    const suffix = params.toString() ? `?${params.toString()}` : ''
+    const res = await fetch(`/api/integrations/canva/imports${suffix}`)
     if (!res.ok) return
     const data = await res.json()
     setImports(Array.isArray(data) ? data : [])
@@ -202,11 +211,45 @@ export function CanvaStudioClient() {
       }
 
       setMessage('Imported successfully. Asset saved to your storage.')
-      setImports((prev) => [importPayload as ImportedAsset, ...prev])
+      await loadImports(slug.trim())
     } catch {
       setMessage('Canva import failed.')
     } finally {
       setImportingDesignId('')
+    }
+  }
+
+  const publishInvitation = async (item: ImportedAsset) => {
+    const normalizedSlug = slug.trim()
+    if (!normalizedSlug) {
+      setMessage('Enter your gallery slug before publishing.')
+      return
+    }
+
+    setPublishingImportId(item.id)
+    setMessage('')
+
+    try {
+      const res = await fetch('/api/invitations/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: normalizedSlug,
+          import_id: item.id,
+        }),
+      })
+      const payload = await res.json()
+      if (!res.ok) {
+        setMessage(payload?.error || 'Could not publish invitation.')
+        return
+      }
+
+      setMessage(`Invitation published: ${payload?.invite_url || `/invite/${normalizedSlug}`}`)
+      await loadImports(normalizedSlug)
+    } catch {
+      setMessage('Could not publish invitation.')
+    } finally {
+      setPublishingImportId('')
     }
   }
 
@@ -242,7 +285,10 @@ export function CanvaStudioClient() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => loadDesigns(false)}
+            onClick={() => {
+              void loadDesigns(false)
+              void loadImports(slug.trim())
+            }}
             disabled={loading}
             className="inline-flex items-center gap-2 bg-black text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
           >
@@ -321,20 +367,45 @@ export function CanvaStudioClient() {
         ) : (
           <div className="space-y-2">
             {imports.map((item) => (
-              <a
+              <div
                 key={item.id}
-                href={item.asset_url}
-                target="_blank"
-                rel="noreferrer"
-                className="block border border-gray-200 rounded-lg px-3 py-2 hover:border-gray-400"
+                className="border border-gray-200 rounded-lg px-3 py-2"
               >
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {item.design_title || item.design_id}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {item.export_format.toUpperCase()} - {new Date(item.created_at).toLocaleString('en-US')}
-                </p>
-              </a>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <a
+                      href={item.asset_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm font-medium text-gray-900 truncate hover:underline"
+                    >
+                      {item.design_title || item.design_id}
+                    </a>
+                    <p className="text-xs text-gray-500">
+                      {item.export_format.toUpperCase()} - {new Date(item.created_at).toLocaleString('en-US')}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {item.is_draft && (
+                      <span className="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
+                        Draft
+                      </span>
+                    )}
+                    {item.is_published && (
+                      <span className="text-[11px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                        Published
+                      </span>
+                    )}
+                    <button
+                      onClick={() => publishInvitation(item)}
+                      disabled={publishingImportId === item.id}
+                      className="inline-flex items-center gap-1 bg-black text-white rounded-lg px-2.5 py-1.5 text-xs disabled:opacity-60"
+                    >
+                      {publishingImportId === item.id ? 'Publishing...' : 'Publish Invitation'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}

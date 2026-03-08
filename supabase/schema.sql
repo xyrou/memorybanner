@@ -100,6 +100,18 @@ CREATE TABLE canva_design_exports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Invitation page state (draft/published Canva exports per order)
+CREATE TABLE invitation_pages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  order_id UUID NOT NULL UNIQUE REFERENCES orders(id) ON DELETE CASCADE,
+  user_email TEXT NOT NULL,
+  draft_export_id UUID REFERENCES canva_design_exports(id) ON DELETE SET NULL,
+  published_export_id UUID REFERENCES canva_design_exports(id) ON DELETE SET NULL,
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX idx_orders_slug ON orders(slug);
 CREATE INDEX idx_orders_expires_at ON orders(expires_at);
@@ -112,6 +124,8 @@ CREATE INDEX idx_rsvps_order_id ON rsvps(order_id);
 CREATE INDEX idx_oauth_connections_user_provider ON oauth_connections(user_email, provider);
 CREATE INDEX idx_canva_design_exports_user ON canva_design_exports(user_email);
 CREATE INDEX idx_canva_design_exports_order ON canva_design_exports(order_id);
+CREATE INDEX idx_invitation_pages_user ON invitation_pages(user_email);
+CREATE INDEX idx_invitation_pages_order ON invitation_pages(order_id);
 
 -- Auto-delete expired orders (run via cron job or Supabase scheduled function)
 -- DELETE FROM orders WHERE expires_at < NOW();

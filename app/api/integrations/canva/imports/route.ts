@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
 
   const slug = req.nextUrl.searchParams.get('slug')
   const service = createServiceClient()
+  let orderId: string | null = null
 
   let query = service
     .from('canva_design_exports')
@@ -25,10 +26,28 @@ export async function GET(req: NextRequest) {
       .eq('email', user.email)
       .maybeSingle()
     if (!order?.id) return NextResponse.json([])
+    orderId = order.id
     query = query.eq('order_id', order.id)
   }
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data ?? [])
+
+  if (!orderId) return NextResponse.json(data ?? [])
+
+  const { data: invitation, error: invitationError } = await service
+    .from('invitation_pages')
+    .select('draft_export_id,published_export_id')
+    .eq('order_id', orderId)
+    .maybeSingle()
+
+  if (invitationError) return NextResponse.json({ error: invitationError.message }, { status: 500 })
+
+  const rows = (data ?? []).map((item) => ({
+    ...item,
+    is_draft: invitation?.draft_export_id === item.id,
+    is_published: invitation?.published_export_id === item.id,
+  }))
+
+  return NextResponse.json(rows)
 }
