@@ -217,6 +217,37 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 View demo gallery
               </Link>
             </div>
+
+            <div className="mt-8 border border-gray-200 rounded-2xl p-5 text-left bg-white">
+              <p className="text-sm font-semibold text-gray-900">Canva Integration</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {canvaConnected
+                  ? `Connected${canvaConnection?.expires_at ? ` (token expires ${new Date(canvaConnection.expires_at).toLocaleDateString('en-US')})` : ''}`
+                  : 'Not connected'}
+              </p>
+              {params.canva && canvaStatusText[params.canva] && (
+                <p className="text-xs text-gray-500 mt-1">{canvaStatusText[params.canva]}</p>
+              )}
+              <div className="mt-4">
+                {canvaConnected ? (
+                  <Link
+                    href="/api/integrations/canva/disconnect"
+                    className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
+                  >
+                    <Unlink size={14} />
+                    Disconnect Canva
+                  </Link>
+                ) : (
+                  <Link
+                    href="/api/integrations/canva/connect?return_to=/dashboard"
+                    className="inline-flex items-center justify-center gap-2 bg-black text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    <Link2 size={14} />
+                    Connect Canva
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
