@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { ExternalLink, Download, RefreshCw } from 'lucide-react'
 
 type CanvaDesign = {
@@ -89,6 +90,10 @@ export function CanvaStudioClient() {
   const [imports, setImports] = useState<ImportedAsset[]>([])
 
   const canLoadMore = useMemo(() => Boolean(continuation), [continuation])
+  const canvaDisconnected = useMemo(
+    () => message.toLowerCase().includes('not connected'),
+    [message]
+  )
 
   const loadImports = async () => {
     const res = await fetch('/api/integrations/canva/imports')
@@ -246,6 +251,15 @@ export function CanvaStudioClient() {
           </button>
         </div>
         {message && <p className="text-sm text-gray-600">{message}</p>}
+        {canvaDisconnected && (
+          <Link
+            href="/api/integrations/canva/connect?return_to=/dashboard/canva"
+            prefetch={false}
+            className="inline-flex items-center gap-2 bg-black text-white rounded-lg px-4 py-2 text-sm font-medium"
+          >
+            Connect Canva
+          </Link>
+        )}
       </div>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-4">

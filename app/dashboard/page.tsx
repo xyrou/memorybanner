@@ -177,6 +177,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       </Link>
                       <Link
                         href="/api/integrations/canva/disconnect"
+                        prefetch={false}
                         className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
                       >
                         <Unlink size={14} />
@@ -186,6 +187,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   ) : (
                     <Link
                       href="/api/integrations/canva/connect?return_to=/dashboard"
+                      prefetch={false}
                       className="inline-flex items-center justify-center gap-2 bg-black text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
                     >
                       <Link2 size={14} />
@@ -251,6 +253,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     </Link>
                     <Link
                       href="/api/integrations/canva/disconnect"
+                      prefetch={false}
                       className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
                     >
                       <Unlink size={14} />
@@ -260,6 +263,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 ) : (
                   <Link
                     href="/api/integrations/canva/connect?return_to=/dashboard"
+                    prefetch={false}
                     className="inline-flex items-center justify-center gap-2 bg-black text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
                   >
                     <Link2 size={14} />
