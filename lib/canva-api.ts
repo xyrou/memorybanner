@@ -14,15 +14,26 @@ type CanvaConnectionRow = {
   expires_at: string
 }
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
 async function getCanvaConnection(userEmail: string): Promise<CanvaConnectionRow | null> {
+  const normalizedEmail = normalizeEmail(userEmail)
   const service = createServiceClient()
-  const { data } = await service
+  const { data, error } = await service
     .from('oauth_connections')
     .select('id,provider,user_email,access_token,refresh_token,token_type,scope,expires_at')
     .eq('provider', 'canva')
-    .eq('user_email', userEmail)
-    .maybeSingle()
-  return (data as CanvaConnectionRow | null) ?? null
+    .ilike('user_email', normalizedEmail)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+
+  if (error) {
+    throw new Error(`Canva connection lookup failed: ${error.message}`)
+  }
+
+  return ((data as CanvaConnectionRow[] | null)?.[0] ?? null)
 }
 
 async function refreshConnectionToken(row: CanvaConnectionRow): Promise<CanvaConnectionRow> {

@@ -9,14 +9,18 @@ export async function GET(req: NextRequest) {
   if (!user?.email) {
     return NextResponse.redirect(new URL('/auth/login', req.url))
   }
+  const normalizedEmail = user.email.trim().toLowerCase()
 
   const service = createServiceClient()
-  const { data: connection } = await service
+  const { data: connections } = await service
     .from('oauth_connections')
     .select('id,access_token,refresh_token')
     .eq('provider', 'canva')
-    .eq('user_email', user.email)
-    .single()
+    .ilike('user_email', normalizedEmail)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+
+  const connection = connections?.[0]
 
   if (connection) {
     const tokenToRevoke = connection.refresh_token || connection.access_token

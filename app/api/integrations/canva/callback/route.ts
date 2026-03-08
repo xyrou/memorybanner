@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const normalizedEmail = user.email.trim().toLowerCase()
     const token = await exchangeCodeForToken(code, verifierCookie)
     const expiresAt = new Date(Date.now() + token.expires_in * 1000).toISOString()
     const service = createServiceClient()
@@ -58,7 +59,7 @@ export async function GET(req: NextRequest) {
       .upsert(
         {
           provider: 'canva',
-          user_email: user.email,
+          user_email: normalizedEmail,
           access_token: token.access_token,
           refresh_token: token.refresh_token ?? null,
           token_type: token.token_type ?? 'Bearer',

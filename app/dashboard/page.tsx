@@ -16,6 +16,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const params = await searchParams
 
   if (!user) redirect('/auth/login')
+  const normalizedEmail = (user.email ?? '').trim().toLowerCase()
 
   // Find orders linked to this user's email
   const service = createServiceClient()
@@ -25,12 +26,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     .eq('email', user.email)
     .order('created_at', { ascending: false })
 
-  const { data: canvaConnection } = await service
+  const { data: canvaConnections } = await service
     .from('oauth_connections')
     .select('id,expires_at')
     .eq('provider', 'canva')
-    .eq('user_email', user.email)
-    .maybeSingle()
+    .ilike('user_email', normalizedEmail)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+
+  const canvaConnection = canvaConnections?.[0] ?? null
 
   const canvaConnected = Boolean(canvaConnection)
   const canvaStatusText: Record<string, string> = {
