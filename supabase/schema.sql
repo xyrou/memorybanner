@@ -85,6 +85,21 @@ CREATE TABLE oauth_connections (
   UNIQUE (provider, user_email)
 );
 
+-- Canva imported exports saved in our storage
+CREATE TABLE canva_design_exports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_email TEXT NOT NULL,
+  order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
+  design_id TEXT NOT NULL,
+  design_title TEXT,
+  export_format TEXT NOT NULL,
+  canva_export_id TEXT,
+  r2_key TEXT NOT NULL UNIQUE,
+  asset_url TEXT NOT NULL,
+  byte_size BIGINT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX idx_orders_slug ON orders(slug);
 CREATE INDEX idx_orders_expires_at ON orders(expires_at);
@@ -95,6 +110,8 @@ CREATE INDEX idx_guestbook_order_id ON guestbook(order_id);
 CREATE INDEX idx_guestbook_order_approved ON guestbook(order_id, is_approved);
 CREATE INDEX idx_rsvps_order_id ON rsvps(order_id);
 CREATE INDEX idx_oauth_connections_user_provider ON oauth_connections(user_email, provider);
+CREATE INDEX idx_canva_design_exports_user ON canva_design_exports(user_email);
+CREATE INDEX idx_canva_design_exports_order ON canva_design_exports(order_id);
 
 -- Auto-delete expired orders (run via cron job or Supabase scheduled function)
 -- DELETE FROM orders WHERE expires_at < NOW();

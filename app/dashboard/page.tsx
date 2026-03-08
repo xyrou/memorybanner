@@ -164,13 +164,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     )}
                   </div>
                   {canvaConnected ? (
-                    <Link
-                      href="/api/integrations/canva/disconnect"
-                      className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
-                    >
-                      <Unlink size={14} />
-                      Disconnect Canva
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Link
+                        href="/dashboard/canva"
+                        className="inline-flex items-center justify-center gap-2 bg-black text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+                      >
+                        Open Canva Studio
+                      </Link>
+                      <Link
+                        href="/api/integrations/canva/disconnect"
+                        className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
+                      >
+                        <Unlink size={14} />
+                        Disconnect Canva
+                      </Link>
+                    </div>
                   ) : (
                     <Link
                       href="/api/integrations/canva/connect?return_to=/dashboard"
@@ -230,13 +238,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               )}
               <div className="mt-4">
                 {canvaConnected ? (
-                  <Link
-                    href="/api/integrations/canva/disconnect"
-                    className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
-                  >
-                    <Unlink size={14} />
-                    Disconnect Canva
-                  </Link>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Link
+                      href="/dashboard/canva"
+                      className="inline-flex items-center justify-center gap-2 bg-black text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+                    >
+                      Open Canva Studio
+                    </Link>
+                    <Link
+                      href="/api/integrations/canva/disconnect"
+                      className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 rounded-xl px-4 py-2 text-sm font-medium hover:border-gray-400 transition-colors"
+                    >
+                      <Unlink size={14} />
+                      Disconnect Canva
+                    </Link>
+                  </div>
                 ) : (
                   <Link
                     href="/api/integrations/canva/connect?return_to=/dashboard"

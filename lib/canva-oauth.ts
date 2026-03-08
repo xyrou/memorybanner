@@ -91,6 +91,32 @@ export async function exchangeCodeForToken(code: string, codeVerifier: string): 
   return res.json() as Promise<CanvaTokenResponse>
 }
 
+export async function refreshCanvaAccessToken(refreshToken: string, scope?: string): Promise<CanvaTokenResponse> {
+  const { clientId, clientSecret } = getCanvaConfig()
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+  })
+  if (scope) body.set('scope', scope)
+  const basicToken = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+
+  const res = await fetch(CANVA_TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${basicToken}`,
+    },
+    body: body.toString(),
+  })
+
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new Error(`Canva token refresh failed: ${detail}`)
+  }
+
+  return res.json() as Promise<CanvaTokenResponse>
+}
+
 export async function revokeCanvaToken(token: string): Promise<void> {
   const { clientId, clientSecret } = getCanvaConfig()
   const body = new URLSearchParams({
